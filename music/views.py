@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404
-from django.views.generic.edit import CreateView, UpdateView
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.contrib import messages
 
 from .forms import AlbumModelForm, BranoModelForm, ArtistaModelForm
 
@@ -79,10 +80,39 @@ def crea_brano(request, pk):
             brano = form.save(commit=False)
             brano.album_appartenenza = album
             brano.save()
-           
+            messages.success(request, f'Brano "{brano.titolo_brano}" aggiunto con successo!')
             return HttpResponseRedirect(album.get_absolute_url())
     else:
         form = BranoModelForm()
 
     context = {"form": form, "album": album}
     return render(request, "music/crea_brano.html", context)
+
+
+class ModificaBrano(StaffMixing, UpdateView):
+    model = Brano
+    form_class = BranoModelForm
+    template_name = "music/modifica_brano.html"
+    
+    def get_success_url(self):
+        messages.success(self.request, f'Brano "{self.object.titolo_brano}" modificato con successo!')
+        return self.object.album_appartenenza.get_absolute_url()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['album'] = self.object.album_appartenenza
+        return context
+
+
+class EliminaBrano(StaffMixing, DeleteView):
+    model = Brano
+    template_name = "music/elimina_brano.html"
+    
+    def get_success_url(self):
+        messages.success(self.request, f'Brano "{self.object.titolo_brano}" eliminato con successo!')
+        return self.object.album_appartenenza.get_absolute_url()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['album'] = self.object.album_appartenenza
+        return context

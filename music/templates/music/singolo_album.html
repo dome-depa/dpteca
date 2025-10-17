@@ -104,6 +104,9 @@
                                 <th scope="col">Titolo</th>
                                 <th scope="col">Crediti</th>
                                 <th scope="col">Durata</th>
+                                {% if request.user.is_staff %}
+                                <th scope="col" class="text-center">Azioni</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
@@ -114,6 +117,22 @@
                                 <td><strong>{{ brano.titolo_brano }}</strong></td>
                                 <td>{{ brano.crediti|default:"-" }}</td>
                                 <td>{{ brano.durata|default:"-" }}</td>
+                                {% if request.user.is_staff %}
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'modifica_brano' pk=brano.pk %}" 
+                                           class="btn btn-outline-primary" 
+                                           title="Modifica brano">
+                                            <i class="bi bi-pencil-fill"></i> Modifica
+                                        </a>
+                                        <a href="{% url 'elimina_brano' pk=brano.pk %}" 
+                                           class="btn btn-outline-danger" 
+                                           title="Elimina brano">
+                                            <i class="bi bi-trash-fill"></i> Elimina
+                                        </a>
+                                    </div>
+                                </td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>

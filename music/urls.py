@@ -9,5 +9,7 @@ urlpatterns = [
     path('album/<int:pk>/', views.VisualizzaAlbum, name="album_view"),
     path('album/<int:pk>/modifica/', views.ModificaAlbum.as_view(), name="modifica_album"),
     path('album/<int:pk>/crea-brano/', views.crea_brano, name="crea_brano"),
+    path('brano/<int:pk>/modifica/', views.ModificaBrano.as_view(), name="modifica_brano"),
+    path('brano/<int:pk>/elimina/', views.EliminaBrano.as_view(), name="elimina_brano"),
 
 ]

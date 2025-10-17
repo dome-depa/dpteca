@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block head_title %}{{ block.super }} - Elimina Brano{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'artista_list' %}">Lista Artisti</a></li>
+<li class="breadcrumb-item"><a href="{% url 'artista_view' pk=album.artista_appartenenza.pk %}">{{ album.artista_appartenenza.nome_artista }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'album_view' pk=album.pk %}">{{ album.titolo_album }}</a></li>
+<li class="breadcrumb-item active">Elimina Brano</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card my-3 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h3 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Conferma Eliminazione</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Attenzione!</h4>
+                    <p>Stai per eliminare il seguente brano:</p>
+                    <hr>
+                    <p class="mb-0"><strong>Titolo:</strong> {{ object.titolo_brano }}</p>
+                    {% if object.sezione %}
+                        <p class="mb-0"><strong>Sezione:</strong> {{ object.sezione }}</p>
+                    {% endif %}
+                    {% if object.progressivo %}
+                        <p class="mb-0"><strong>Progressivo:</strong> {{ object.progressivo }}</p>
+                    {% endif %}
+                    {% if object.crediti %}
+                        <p class="mb-0"><strong>Crediti:</strong> {{ object.crediti }}</p>
+                    {% endif %}
+                    {% if object.durata %}
+                        <p class="mb-0"><strong>Durata:</strong> {{ object.durata }}</p>
+                    {% endif %}
+                    <p class="mb-0"><strong>Album:</strong> {{ album.titolo_album }}</p>
+                    <p class="mb-0"><strong>Artista:</strong> {{ album.artista_appartenenza.nome_artista }}</p>
+                </div>
+
+                <div class="alert alert-warning" role="alert">
+                    <strong>Questa azione non può essere annullata!</strong> Il brano verrà eliminato permanentemente dal database.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <a class="btn btn-secondary me-md-2" href="{{ album.get_absolute_url }}">
+                            <i class="bi bi-x-circle"></i> Annulla
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash-fill"></i> Elimina Definitivamente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ block.super }} - Modifica Brano{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'artista_list' %}">Lista Artisti</a></li>
+<li class="breadcrumb-item"><a href="{% url 'artista_view' pk=album.artista_appartenenza.pk %}">{{ album.artista_appartenenza.nome_artista }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'album_view' pk=album.pk %}">{{ album.titolo_album }}</a></li>
+<li class="breadcrumb-item active">Modifica Brano</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card my-3">
+            <div class="card-header">
+                <h3>Modifica Brano: {{ object.titolo_brano }}</h3>
+                <p class="text-muted mb-0">Album: {{ album.titolo_album }} - Artista: {{ album.artista_appartenenza.nome_artista }}</p>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <a class="btn btn-secondary me-md-2" href="{{ album.get_absolute_url }}">Annulla</a>
+                        <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
