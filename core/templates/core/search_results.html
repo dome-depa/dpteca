@@ -71,11 +71,58 @@
                 </div>
             {% endif %}
             
+            <!-- Tracks Results -->
+            {% if results.brani %}
+                <h4>Brani ({{ results.brani.count }})</h4>
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Titolo Brano</th>
+                                        <th>Album</th>
+                                        <th>Artista</th>
+                                        <th>Crediti</th>
+                                        <th>Durata</th>
+                                        <th>Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for brano in results.brani %}
+                                    <tr>
+                                        <td><strong>{{ brano.titolo_brano }}</strong></td>
+                                        <td>
+                                            <a href="{% url 'album_view' pk=brano.album_appartenenza.pk %}">
+                                                {{ brano.album_appartenenza.titolo_album }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'artista_view' pk=brano.album_appartenenza.artista_appartenenza.pk %}">
+                                                {{ brano.album_appartenenza.artista_appartenenza.nome_artista }}
+                                            </a>
+                                        </td>
+                                        <td>{{ brano.crediti|default:"-" }}</td>
+                                        <td>{{ brano.durata|default:"-" }}</td>
+                                        <td>
+                                            <a href="{% url 'album_view' pk=brano.album_appartenenza.pk %}" class="btn btn-sm btn-outline-primary">
+                                                Vai all'Album
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
             <!-- No Results -->
-            {% if not results.artisti and not results.album %}
+            {% if not results.artisti and not results.album and not results.brani %}
                 <div class="alert alert-info" role="alert">
                     <h4 class="alert-heading">Nessun risultato trovato!</h4>
-                    <p>Non sono stati trovati artisti o album che corrispondono alla tua ricerca.</p>
+                    <p>Non sono stati trovati artisti, album o brani che corrispondono alla tua ricerca.</p>
                     <hr>
                     <p class="mb-0">Prova con termini diversi o più generici.</p>
                 </div>

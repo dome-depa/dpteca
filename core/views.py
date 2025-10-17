@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django.views.generic.list import ListView
 from django.db.models import Q
 
-from music.models import Artista, Album
+from music.models import Artista, Album, Brano
 
 # Create your views here.
 
@@ -48,21 +48,35 @@ class SearchView(ListView):
     def get_queryset(self):
         query = self.request.GET.get('q')
         if query:
-            # Search in artists and albums
+            # Search in artists - search in name, profile and members
             artisti = Artista.objects.filter(
                 Q(nome_artista__icontains=query) | 
-                Q(genere__icontains=query)
-            )
+                Q(profilo__icontains=query) |
+                Q(componenti__icontains=query)
+            ).distinct()
+            
+            # Search in albums - search in title, artist name, label, genre, and notes
             album = Album.objects.filter(
                 Q(titolo_album__icontains=query) | 
-                Q(artista_appartenenza__nome_artista__icontains=query)
-            )
+                Q(artista_appartenenza__nome_artista__icontains=query) |
+                Q(editore__icontains=query) |
+                Q(genere__icontains=query) |
+                Q(note__icontains=query)
+            ).distinct()
+            
+            # Search in tracks - search in title and credits
+            brani = Brano.objects.filter(
+                Q(titolo_brano__icontains=query) |
+                Q(crediti__icontains=query)
+            ).select_related('album_appartenenza', 'album_appartenenza__artista_appartenenza').distinct()
+            
             return {
                 'artisti': artisti,
                 'album': album,
+                'brani': brani,
                 'query': query
             }
-        return {'artisti': [], 'album': [], 'query': ''}
+        return {'artisti': [], 'album': [], 'brani': [], 'query': ''}
 
     
 
