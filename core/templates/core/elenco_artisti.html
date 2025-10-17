@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ block.super }} - Elenco Artisti{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Lista Artisti</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+
+<div class="card-body">
+    <a class="btn btn-sm btn-info mt-2 mb-1" href="{% url 'crea_artista'%}"> + Artista</a>
+</div>
+
+{% for artista in lista_artisti %}  
+    <div class="card my-1">
+        <div class="card-header my-0">
+            <h5>Artista/Gruppo: <a class="mx-1" href="{{ artista.get_absolute_url }}"><strong>{{ artista.nome_artista }}</strong></a></h5> 
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg- col-2">
+                    {% if artista.foto_artista and artista.foto_artista.url %}
+                        <img src="{{ artista.foto_artista.url }}" style="max-width:100%">  
+                    {% else %}
+                        <div class="text-muted">Nessuna foto</div>
+                    {% endif %}
+                    <p class="mb-0">Album censiti: {{ artista.get_albums_number }}</p>
+                    <p class="mb-0">Album completati: {{ artista.get_albums_closed }}</p>
+
+                </div>
+                <div class="col-lg-8 col-8"> 
+                    <P>{{ artista.profilo }}</P>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+        </div>
+    
+    </div>
+{% endfor %}  
+
+{% endblock content %}

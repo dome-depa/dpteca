@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ block.super }} - Inserisci Nuovo Artista{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'artista_list' %}">Lista Artisti</a></li>
+<li class="breadcrumb-item active">Crea Artista</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+    <div class="row justify-content-center mt-4">
+        <div class="col-6">
+            <h2>Crea Nuovo Artista</h2>
+            <form class="" method="POST" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form | crispy }}
+                <input type="submit" class="btn btn-info" value="Inserisci!">
+            </form>
+        </div>
+    </div>
+{% endblock content %}

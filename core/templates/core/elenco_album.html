@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ block.super }} - Elenco Album{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Lista Album</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+
+    {% for album in lista_album %}  
+
+        <div class="card my-3">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-lg-2 col-2">
+                        {% if album.copertina.name %}
+                            <a href="{{ album.get_absolute_url }}">
+                                <img src="{{ album.copertina.url }}" style="max-width:100%" alt="{{ album.titolo_album }}">
+                            </a>
+                        {% else %}
+                            <div class="text-muted small">Nessuna copertina</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-8 col-8"> 
+                        <h5>
+                            <a href="{{ album.get_absolute_url }}"><strong>{{ album.titolo_album }}</strong></a>  
+                            <span class="text-muted">by</span>  
+                            <a href="{% url 'artista_view' pk=album.artista_appartenenza.pk %}">{{ album.artista_appartenenza }}</a>
+                        </h5>
+                        <p class="mb-0">
+                            <span class="badge bg-secondary">{{ album.supporto|default:"CD" }}</span>
+                            {% if album.data_rilascio %}
+                                <span class="text-muted">Rilascio: {{ album.data_rilascio|date:"Y" }}</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0">
+                            <span class="badge bg-info">{{ album.brani.count }} brani</span>
+                            {% if album.closed %}
+                                <span class="badge bg-success">Completato</span>
+                            {% else %}
+                                <span class="badge bg-warning">In corso</span>
+                            {% endif %}
+                        </p>
+                        {% if album.genere %}
+                            <p class="mb-0 text-muted small">Genere: {{ album.genere }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-2 col-2 d-flex align-items-center justify-content-center">
+                        <a href="{{ album.get_absolute_url }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-music-note-list"></i> Vedi Brani
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">Nessun album trovato</h4>
+            <p>Non ci sono album nel database. Aggiungi il primo album!</p>
+        </div>
+    {% endfor %}
+ 
+
+{% endblock content %}

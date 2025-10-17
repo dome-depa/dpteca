@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block head_title %}{{ block.super }} - {{ artista.nome_artista }}{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'artista_list' %}">Lista Artisti</a></li>
+<li class="breadcrumb-item active">{{ artista.nome_artista }}</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+    
+    <div class="card my-3">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-lg-8 col-8">
+                    <h5>Artista: <strong>{{ artista.nome_artista }}</strong></h5>
+                </div>
+                <div class="col-lg-4 col-4">
+                    <div class="text-end">
+                        {% if request.user.is_staff %}
+                            <a class="btn btn-sm btn-warning" href="{% url 'modifica_artista' pk=artista.pk %}">Modifica Artista</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3 col-3">
+                    {% if artista.foto_artista.name %}
+                        <img src="{{ artista.foto_artista.url }}" style="max-width:100%">
+                    {% else %}
+                        <div class="text-muted">Nessuna foto</div>
+                    {% endif %}
+                </div>
+                <div class="col-lg-9 col-9"> 
+                    <h4><strong>{{ artista.nome_artista }}</strong></h4>
+                    {% if artista.componenti %}
+                        <p class="mb-0"><strong>Componenti:</strong> {{ artista.componenti }}</p>
+                    {% endif %}
+                    {% if artista.sites %}
+                        <p class="mb-0"><strong>Siti:</strong> {{ artista.sites }}</p>
+                    {% endif %}
+                    {% if artista.profilo %}
+                        <p><strong>Profilo:</strong> {{ artista.profilo }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card my-3">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-lg-4 col-4">
+                    <h3><strong>Discografia</strong></h3>
+                </div>
+                <div class="col-lg-4 col-4">
+                    <div class="text-center">
+                        {% if request.user.is_staff %}
+                            <a class="btn btn-sm btn-warning my-2 mx-auto" href="{% url 'modifica_artista' pk=artista.pk %}">Modifica Artista</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-lg-4 col-4">
+                    <div class="text-end">
+                        <a class="btn btn-sm btn-info my-2 mx-auto" href="{% url 'crea_album' pk=artista.pk %}">Aggiungi Album</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="card-body my-0">
+            {% for album in discografia %}
+                <div class="row border-bottom py-2">
+                    <div class="col-lg-2 col-2">
+                        {% if album.copertina.name %}
+                            <img src="{{ album.copertina.url }}" style="max-width:100%">
+                        {% else %}
+                            <div class="text-muted small">Nessuna copertina</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-7 col-7">
+                        <h5><a href="{{ album.get_absolute_url }}">{{ album.titolo_album }}</a></h5>
+                        <p class="mb-0">Etichetta: {{ album.editore }} - Catalogo: {{ album.catalogo }}</p>
+                        <p class="mb-0">Stile: {% for stile in album.stili.all %}"{{ stile }}", {% endfor %}</p>
+                        <p class="mb-0">Rilascio: {{ album.data_rilascio|date:"Y" }} | <span class="badge bg-info">{{ album.brani.count }} brani</span></p>
+                        {% if album.note %}
+                            <p class="text-muted small">{{ album.note|truncatewords:20 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-3 col-3">
+                        <p class="mb-0"><strong>€{{ album.costo }}</strong></p>
+                        {% if album.closed %}
+                            <span class="badge bg-success">Completato</span>
+                        {% else %}
+                            <span class="badge bg-warning">In corso</span>
+                        {% endif %}
+                        <div class="mt-2">
+                            <a href="{{ album.get_absolute_url }}" class="btn btn-sm btn-outline-primary">
+                                Vedi Brani →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted">Nessun album disponibile per questo artista.</p>
+            {% endfor %}
+        </div>
+        
+    </div>
+
+{% endblock content %}

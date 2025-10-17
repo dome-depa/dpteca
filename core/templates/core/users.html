@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ block.super }} - Lista Utenti{% endblock head_title %}
+
+{% block content %}
+    <h2> Lista Utenti</h2>
+    <hr>
+    {% for utente in object_list %}
+        <p><a href="{% url 'user_profile' username=utente.username %}"><strong>@{{ utente.username }}</strong></a></p>
+    {% endfor %}
+       
+
+{% endblock content %}

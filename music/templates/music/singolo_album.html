@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block head_title %}{{ block.super }} - {{ album.titolo_album }}{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'artista_list' %}">Lista Artisti</a></li>
+<li class="breadcrumb-item"><a href="{% url 'artista_view' pk=artista.pk %}">{{ artista.nome_artista }}</a></li>
+<li class="breadcrumb-item active">{{ album.titolo_album }}</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+    
+    <div class="card my-3">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-lg-8 col-8">
+                    <h5>Album: <strong>{{ album.titolo_album }}</strong></h5>
+                </div>
+                <div class="col-lg-4 col-4">
+                    <div class="text-end">
+                        {% if request.user.is_staff %}
+                            <a class="btn btn-sm btn-warning" href="{% url 'modifica_album' pk=album.pk %}">Modifica Album</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3 col-3">
+                    {% if album.copertina.name %}
+                        <img src="{{ album.copertina.url }}" style="max-width:100%" alt="{{ album.titolo_album }}">
+                    {% else %}
+                        <div class="text-muted">Nessuna copertina</div>
+                    {% endif %}
+                </div>
+                <div class="col-lg-9 col-9"> 
+                    <h4><strong>{{ album.titolo_album }}</strong></h4>
+                    <p class="mb-0"><strong>Artista:</strong> <a href="{% url 'artista_view' pk=artista.pk %}">{{ artista.nome_artista }}</a></p>
+                    {% if album.editore %}
+                        <p class="mb-0"><strong>Etichetta:</strong> {{ album.editore }}</p>
+                    {% endif %}
+                    {% if album.catalogo %}
+                        <p class="mb-0"><strong>Catalogo:</strong> {{ album.catalogo }}</p>
+                    {% endif %}
+                    {% if album.genere %}
+                        <p class="mb-0"><strong>Genere:</strong> {{ album.genere }}</p>
+                    {% endif %}
+                    {% if album.stili.all %}
+                        <p class="mb-0"><strong>Stili:</strong> 
+                        {% for stile in album.stili.all %}
+                            "{{ stile }}"{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                        </p>
+                    {% endif %}
+                    {% if album.supporto %}
+                        <p class="mb-0"><strong>Supporto:</strong> {{ album.supporto }}</p>
+                    {% endif %}
+                    {% if album.data_rilascio %}
+                        <p class="mb-0"><strong>Data rilascio:</strong> {{ album.data_rilascio|date:"d/m/Y" }}</p>
+                    {% endif %}
+                    {% if album.deposito %}
+                        <p class="mb-0"><strong>Deposito:</strong> {{ album.deposito }}</p>
+                    {% endif %}
+                    <p class="mb-0"><strong>Costo:</strong> €{{ album.costo }}</p>
+                    <p class="mb-0">
+                        <strong>Stato:</strong> 
+                        {% if album.closed %}
+                            <span class="badge bg-success">Completato</span>
+                        {% else %}
+                            <span class="badge bg-warning">In corso</span>
+                        {% endif %}
+                    </p>
+                    {% if album.note %}
+                        <p class="mt-2"><strong>Note:</strong> {{ album.note }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card my-3">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-lg-8 col-8">
+                    <h3><strong>Brani</strong> <span class="badge bg-info">{{ brani_album.count }}</span></h3>
+                </div>
+                <div class="col-lg-4 col-4">
+                    <div class="text-end">
+                        {% if request.user.is_staff %}
+                            <a class="btn btn-sm btn-info my-2" href="{% url 'crea_brano' pk=album.pk %}">Aggiungi Brano</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="card-body my-0">
+            {% if brani_album %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Sezione</th>
+                                <th scope="col">Titolo</th>
+                                <th scope="col">Crediti</th>
+                                <th scope="col">Durata</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for brano in brani_album %}
+                            <tr>
+                                <th scope="row">{{ brano.progressivo|default:"-" }}</th>
+                                <td>{{ brano.sezione|default:"-" }}</td>
+                                <td><strong>{{ brano.titolo_brano }}</strong></td>
+                                <td>{{ brano.crediti|default:"-" }}</td>
+                                <td>{{ brano.durata|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">Nessun brano disponibile per questo album.</p>
+                {% if request.user.is_staff %}
+                    <p>Clicca su "Aggiungi Brano" per iniziare ad aggiungere i brani.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+        
+    </div>
+
+{% endblock content %}

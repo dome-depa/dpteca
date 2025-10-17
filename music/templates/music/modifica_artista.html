@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ block.super }} - Modifica Artista{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'artista_list' %}">Lista Artisti</a></li>
+<li class="breadcrumb-item"><a href="{% url 'artista_view' pk=object.pk %}">{{ object.nome_artista }}</a></li>
+<li class="breadcrumb-item active">Modifica Artista</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+    <div class="row justify-content-center mt-4">
+        <div class="col-6">
+            <h2>Modifica Artista: {{ object.nome_artista }}</h2>
+            <form class="" method="POST" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form | crispy }}
+                <input type="submit" class="btn btn-info" value="Salva Modifiche">
+                <a href="{% url 'artista_view' object.pk %}" class="btn btn-secondary">Annulla</a>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

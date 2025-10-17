@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block head_title %}{{ block.super }} - Risultati Ricerca{% endblock head_title %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item active">Risultati Ricerca</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Risultati della ricerca{% if results.query %} per "{{ results.query }}"{% endif %}</h2>
+        <hr>
+        
+        {% if results.query %}
+            <!-- Artists Results -->
+            {% if results.artisti %}
+                <h4>Artisti ({{ results.artisti.count }})</h4>
+                <div class="row mb-4">
+                    {% for artista in results.artisti %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <a href="{% url 'artista_view' pk=artista.pk %}">{{ artista.nome_artista }}</a>
+                                    </h5>
+                                    {% if artista.genere %}
+                                        <p class="card-text">
+                                            <small class="text-muted">{{ artista.genere }}</small>
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <!-- Albums Results -->
+            {% if results.album %}
+                <h4>Album ({{ results.album.count }})</h4>
+                <div class="row mb-4">
+                    {% for album in results.album %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card">
+                                {% if album.copertina.name %}
+                                    <img src="{{ album.copertina.url }}" class="card-img-top" alt="{{ album.titolo_album }}" style="max-height: 200px; object-fit: cover;">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <a href="{% url 'album_view' pk=album.pk %}">{{ album.titolo_album }}</a>
+                                    </h5>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            di <a href="{% url 'artista_view' pk=album.artista_appartenenza.pk %}">{{ album.artista_appartenenza.nome_artista }}</a>
+                                        </small>
+                                    </p>
+                                    {% if album.data_rilascio %}
+                                        <p class="card-text mb-2">
+                                            <small class="text-muted">{{ album.data_rilascio|date:"Y" }}</small>
+                                        </p>
+                                    {% endif %}
+                                    <span class="badge bg-info">{{ album.brani.count }} brani</span>
+                                    <a href="{% url 'album_view' pk=album.pk %}" class="btn btn-sm btn-outline-primary mt-2">
+                                        Vedi Dettagli e Brani →
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <!-- No Results -->
+            {% if not results.artisti and not results.album %}
+                <div class="alert alert-info" role="alert">
+                    <h4 class="alert-heading">Nessun risultato trovato!</h4>
+                    <p>Non sono stati trovati artisti o album che corrispondono alla tua ricerca.</p>
+                    <hr>
+                    <p class="mb-0">Prova con termini diversi o più generici.</p>
+                </div>
+            {% endif %}
+            
+        {% else %}
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Inserisci un termine di ricerca</h4>
+                <p>Utilizza il campo di ricerca nella barra di navigazione per cercare artisti e album.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

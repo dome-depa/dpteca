@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ block.super }} - HOMEPAGE{% endblock head_title %}
+
+{% block content %}
+ 
+    {% for artista in lista_artisti %}  
+        <div class="card my-1">
+            <div class="card-header my-0">
+                <h5>Artista/Gruppo: <a class="mx-1" href="{{ artista.get_absolute_url }}"><strong>{{ artista.nome_artista }}</strong></a></h5> 
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg- col-2">
+                        {% if artista.foto_artista.name %}
+                            <img src="{{ artista.foto_artista.url }}" style="max-width:100%">  
+                        {% else %}
+                            <div class="text-muted">Nessuna foto</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-8 col-8"> 
+                        <P>{{ artista.profilo }}</P>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+            </div>
+        
+        </div>
+    {% endfor %}
+
+{% endblock content %}
