@@ -35,3 +35,17 @@ Thumbs.db
 # PDF documents (optional - rimuovi se vuoi versionarli)
 *.pdf
 
+# Document files
+*.docx
+*.doc
+mailto/
+
+# Temporary files
+~$*
+
+# Images in root (use media/ for uploaded images)
+/*.jpg
+/*.jpeg
+/*.png
+/*.gif
+

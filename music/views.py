@@ -25,7 +25,12 @@ class ModificaArtista(StaffMixing, UpdateView):
     template_name = "music/modifica_artista.html"
     
     def get_success_url(self):
+        messages.success(self.request, f'Artista "{self.object.nome_artista}" modificato con successo!')
         return self.object.get_absolute_url()
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Errore di validazione: controlla i campi evidenziati e riprova.')
+        return super().form_invalid(form)
 
 class ModificaAlbum(StaffMixing, UpdateView):
     model = Album
@@ -33,7 +38,12 @@ class ModificaAlbum(StaffMixing, UpdateView):
     template_name = "music/modifica_album.html"
     
     def get_success_url(self):
+        messages.success(self.request, f'Album "{self.object.titolo_album}" modificato con successo!')
         return self.object.get_absolute_url()
+    
+    def form_invalid(self, form):
+        messages.error(self.request, 'Errore di validazione: controlla i campi evidenziati e riprova.')
+        return super().form_invalid(form)
 
 def VisualizzaArtista(request, pk):   
     artista = get_object_or_404(Artista, pk=pk)
@@ -47,13 +57,16 @@ def VisualizzaArtista(request, pk):
 def CreaAlbum(request, pk):
     artista = get_object_or_404(Artista, pk=pk)
     if request.method == "POST":
-        form = AlbumModelForm(request.POST)
+        form = AlbumModelForm(request.POST, request.FILES)
         if form.is_valid():
             album = form.save(commit=False)
             album.artista_appartenenza = artista
             album.save()
-           
+            form.save_m2m()  # Salva relazioni many-to-many (stili)
+            messages.success(request, f'Album "{album.titolo_album}" creato con successo!')
             return HttpResponseRedirect(artista.get_absolute_url())
+        else:
+            messages.error(request, 'Errore di validazione: controlla i campi evidenziati e riprova.')
     else:
         form = AlbumModelForm()
 
