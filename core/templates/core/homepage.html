@@ -4,6 +4,23 @@
 {% block head_title %}{{ block.super }} - HOMEPAGE{% endblock head_title %}
 
 {% block content %}
+
+    {% if not user.is_authenticated %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Benvenuto in dPteca!</h5>
+        <p class="mb-2">Accedi per accedere a tutte le funzionalità e gestire la tua collezione musicale.</p>
+        <hr>
+        <div class="d-flex gap-2">
+            <a href="{% url 'login' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-box-arrow-in-right"></i> Accedi
+            </a>
+            <a href="{% url 'registrazione_view' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-person-plus"></i> Registrati
+            </a>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
  
     {% for artista in lista_artisti %}  
         <div class="card my-1">
