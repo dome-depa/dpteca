@@ -67,9 +67,9 @@ class Album(models.Model):
 
 
 class Brano(models.Model):
-    titolo_brano = models.CharField(max_length=50)
+    titolo_brano = models.CharField(max_length=150)
     sezione = models.CharField(max_length=2, blank=True, null=True)
-    progressivo = models.CharField(max_length=2, blank=True, null=True)    
+    progressivo = models.CharField(max_length=3, blank=True, null=True)    
     crediti = models.CharField(max_length=100, blank=True, null=True)
     durata = models.CharField(max_length=5, blank=True, null=True)
     album_appartenenza = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="brani")
