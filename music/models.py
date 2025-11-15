@@ -39,11 +39,11 @@ class Stile(models.Model):
 
 class Album(models.Model):
     titolo_album = models.CharField(max_length=140)
-    editore = models.CharField(max_length=20, blank=True, null=True)
-    catalogo = models.CharField(max_length=16, blank=True, null=True)
-    genere = models.CharField(max_length=10, blank=True, null=True)  
+    editore = models.CharField(max_length=40, blank=True, null=True)
+    catalogo = models.CharField(max_length=30, blank=True, null=True)
+    genere = models.CharField(max_length=30, blank=True, null=True)  
     stili = models.ManyToManyField(Stile, blank=True)  
-    supporto = models.CharField(max_length=10, blank=True, null=True)
+    supporto = models.CharField(max_length=20, blank=True, null=True)
     data_rilascio = models.DateField(blank=True, null=True)
     deposito = models.CharField(max_length=10, blank=True, null=True)
     note = models.TextField(blank=True, null=True)
