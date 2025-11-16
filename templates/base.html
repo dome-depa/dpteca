@@ -12,10 +12,33 @@
     <title>{% block head_title %}LP Teca{% endblock head_title %}</title>
 
     <link rel="stylesheet" href="{% static 'css/dPteca.css' %}">
+    <style>
+      /* Mantiene lo spazio sotto la navbar fissata in alto */
+      body { padding-top: 70px; }
+      @media (min-width: 992px) { body { padding-top: 72px; } }
+      
+      /* Immagini artista: dimensioni uniformi con ritaglio centrato */
+      .artist-photo {
+        width: 140px;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 6px;
+      }
+      .artist-photo-lg {
+        width: 220px;
+        height: 220px;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+      @media (max-width: 576px) {
+        .artist-photo { width: 96px; height: 96px; }
+        .artist-photo-lg { width: 160px; height: 160px; }
+      }
+    </style>
 
 </head>
   <body>
-      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container">
           <a class="navbar-brand" href="{% url 'homepage' %}">dPteca</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +55,9 @@
               </li>
               <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'album_list' %}active{% endif %}" href="{% url 'album_list' %}">Lista Album</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'report_artisti_pdf' %}" target="_blank" rel="noopener">Report PDF</a>
               </li>
               
               {% if request.user.is_authenticated and request.user.is_staff %}

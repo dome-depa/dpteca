@@ -1,10 +1,17 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
 from django.urls import reverse
 from django.contrib import messages
+from django.template.loader import render_to_string
+from django.conf import settings
+import os
+from django.urls import reverse_lazy
+from io import BytesIO
 
 from .forms import AlbumModelForm, BranoModelForm, ArtistaModelForm
+from django.db.models import Prefetch, Case, When, IntegerField
 
 from .mixins import StaffMixing
 from .models import Artista, Album, Brano
@@ -85,6 +92,177 @@ def VisualizzaAlbum(request, pk):
     return render(request, "music/singolo_album.html", context)
 
 
+def _link_callback(uri, rel):
+    """
+    Converte URL static/media in percorsi file assoluti per xhtml2pdf.
+    """
+    if uri.startswith(settings.MEDIA_URL):
+        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
+    elif uri.startswith(settings.STATIC_URL):
+        static_root = getattr(settings, "STATIC_ROOT", None) or os.path.join(settings.BASE_DIR, "static")
+        path = os.path.join(static_root, uri.replace(settings.STATIC_URL, ""))
+    else:
+        return uri
+    return path
+
+
+def report_artisti_pdf(request):
+    """
+    Produce un PDF con:
+    - Elenco Artisti
+    - Per ogni artista: album in ordine di data_rilascio, con copertina, etichetta (editore) e catalogo
+    Accesso non ristretto (solo lettura).
+    """
+    try:
+        # Import locale per evitare errori di import a livello modulo in ambienti senza xhtml2pdf
+        from xhtml2pdf import pisa
+    except ImportError:
+        # Fallback: genera PDF con ReportLab
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.lib.units import mm
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.utils import ImageReader
+        except ImportError:
+            return HttpResponse("PDF non disponibile: installare reportlab.", status=500)
+
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+
+        x_margin = 14 * mm
+        y_margin = 18 * mm
+        y = height - y_margin
+
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(x_margin, y, "Elenco Artisti e Discografie")
+        y -= 10 * mm
+
+        c.setFont("Helvetica", 10)
+        for artista in Artista.objects.all().order_by("nome_artista"):
+            # intestazione artista
+            if y < 40 * mm:
+                c.showPage()
+                y = height - y_margin
+            c.setFont("Helvetica-Bold", 12)
+            c.drawString(x_margin, y, artista.nome_artista or "")
+            y -= 6 * mm
+            c.setFont("Helvetica", 10)
+
+            # albums: esclude "Classica", poi ordina non-classica prima di classica (se presente in stringa), quindi per data
+            albums_qs = (
+                Album.objects.filter(artista_appartenenza=artista)
+                .exclude(genere__iexact="Classica")
+                .annotate(
+                    genere_is_classico=Case(
+                        When(genere__icontains="classica", then=1),
+                        default=0,
+                        output_field=IntegerField(),
+                    )
+                )
+                .order_by("genere_is_classico", "data_rilascio")
+            )
+            for album in albums_qs:
+                if y < 30 * mm:
+                    c.showPage()
+                    y = height - y_margin
+                # testo a sinistra
+                title = album.titolo_album or ""
+                anno = f" ({album.data_rilascio.year})" if album.data_rilascio else ""
+                c.drawString(x_margin, y, f"{title}{anno}")
+                y -= 5 * mm
+                meta_kv = []
+                if getattr(album, "genere", None):
+                    meta_kv.append(("Genere", album.genere))
+                if album.editore:
+                    meta_kv.append(("Etichetta", album.editore))
+                if album.catalogo:
+                    meta_kv.append(("Catalogo", album.catalogo))
+                try:
+                    num_brani = album.brani.count()
+                except Exception:
+                    num_brani = 0
+                if num_brani:
+                    meta_kv.append(("Brani", str(num_brani)))
+                if meta_kv:
+                    x_text = x_margin
+                    for idx, (label_txt, value_txt) in enumerate(meta_kv):
+                        # label normale
+                        c.setFont("Helvetica", 9)
+                        label_render = f"{label_txt}: "
+                        c.drawString(x_text, y, label_render)
+                        x_text += c.stringWidth(label_render, "Helvetica", 9)
+                        # valore corsivo
+                        c.setFont("Helvetica-Oblique", 9)
+                        c.drawString(x_text, y, str(value_txt))
+                        x_text += c.stringWidth(str(value_txt), "Helvetica-Oblique", 9)
+                        # separatore per coppie successive
+                        if idx < len(meta_kv) - 1:
+                            sep = " • "
+                            c.setFont("Helvetica", 9)
+                            c.drawString(x_text, y, sep)
+                            x_text += c.stringWidth(sep, "Helvetica", 9)
+                    c.setFont("Helvetica", 10)
+                # immagine a destra
+                if album.copertina and getattr(album.copertina, "path", None):
+                    try:
+                        img = ImageReader(album.copertina.path)
+                        img_w = img_h = 28 * mm
+                        c.drawImage(
+                            img,
+                            width - x_margin - img_w,
+                            y - img_h + 3 * mm,
+                            width=img_w,
+                            height=img_h,
+                            preserveAspectRatio=True,
+                            anchor="n",
+                        )
+                    except Exception:
+                        pass
+                y -= 10 * mm
+
+            y -= 4 * mm
+
+        c.showPage()
+        c.save()
+        pdf = buffer.getvalue()
+        buffer.close()
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = 'inline; filename="artisti_albums.pdf"'
+        response.write(pdf)
+        return response
+    # Esclude gli album con genere "Classica", poi ordina: non-classica prima, quindi per data_rilascio
+    albums_ordered = (
+        Album.objects.all()
+        .exclude(genere__iexact="Classica")
+        .annotate(
+            genere_is_classico=Case(
+                When(genere__icontains="classica", then=1),
+                default=0,
+                output_field=IntegerField(),
+            )
+        )
+        .order_by("genere_is_classico", "data_rilascio")
+    )
+    artisti = Artista.objects.all().prefetch_related(
+        Prefetch("albums", queryset=albums_ordered),
+        "albums__stili",
+    ).order_by("nome_artista")
+    # ordina gli album per data_rilascio discendente a livello di template
+    html = render_to_string(
+        "music/report_artisti_albums.html",
+        {
+            "artisti": artisti,
+            "MEDIA_URL": settings.MEDIA_URL,
+        },
+    )
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'inline; filename="artisti_albums.pdf"'
+    pisa_status = pisa.CreatePDF(html, dest=response, link_callback=_link_callback, encoding="utf-8")
+    if pisa_status.err:
+        return HttpResponse("Errore nella generazione del PDF", status=500)
+    return response
+
 def crea_brano(request, pk):
     album = get_object_or_404(Album, pk=pk)
     if request.method == "POST":
@@ -129,3 +307,24 @@ class EliminaBrano(StaffMixing, DeleteView):
         context = super().get_context_data(**kwargs)
         context['album'] = self.object.album_appartenenza
         return context
+
+
+class EliminaAlbum(StaffMixing, DeleteView):
+    model = Album
+    template_name = "music/elimina_album.html"
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        album = self.object
+        artista = album.artista_appartenenza
+        num_brani = album.brani.count()
+        response = super().delete(request, *args, **kwargs)
+        if num_brani:
+            messages.success(request, f'Album "{album.titolo_album}" e {num_brani} brani associati eliminati con successo!')
+        else:
+            messages.success(request, f'Album "{album.titolo_album}" eliminato con successo!')
+        return response
+
+    def get_success_url(self):
+        # Dopo l'eliminazione dell'album, torna alla pagina dell'artista
+        return self.object.artista_appartenenza.get_absolute_url()

@@ -20,58 +20,36 @@
                     <div class="text-end">
                         {% if request.user.is_staff %}
                             <a class="btn btn-sm btn-warning" href="{% url 'modifica_album' pk=album.pk %}">Modifica Album</a>
+                            <a class="btn btn-sm btn-danger" href="{% url 'elimina_album' pk=album.pk %}">Elimina Album</a>
                         {% endif %}
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-lg-3 col-3">
-                    {% if album.copertina.name %}
-                        <img src="{{ album.copertina.url }}" style="max-width:100%" alt="{{ album.titolo_album }}">
-                    {% else %}
-                        <div class="text-muted">Nessuna copertina</div>
-                    {% endif %}
+            <div class="row align-items-center g-2">
+                <div class="col-12 col-lg-4">
+                    <div class="mb-0"><strong>Artista:</strong> <a href="{% url 'artista_view' pk=artista.pk %}">{{ artista.nome_artista }}</a></div>
                 </div>
-                <div class="col-lg-9 col-9"> 
-                    <h4><strong>{{ album.titolo_album }}</strong></h4>
-                    <p class="mb-0"><strong>Artista:</strong> <a href="{% url 'artista_view' pk=artista.pk %}">{{ artista.nome_artista }}</a></p>
-                    {% if album.editore %}
-                        <p class="mb-0"><strong>Etichetta:</strong> {{ album.editore }}</p>
-                    {% endif %}
-                    {% if album.catalogo %}
-                        <p class="mb-0"><strong>Catalogo:</strong> {{ album.catalogo }}</p>
-                    {% endif %}
-                    {% if album.genere %}
-                        <p class="mb-0"><strong>Genere:</strong> {{ album.genere }}</p>
-                    {% endif %}
-                    {% if album.stili.all %}
-                        <p class="mb-0"><strong>Stili:</strong> 
-                        {% for stile in album.stili.all %}
-                            "{{ stile }}"{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                        </p>
-                    {% endif %}
-                    {% if album.supporto %}
-                        <p class="mb-0"><strong>Supporto:</strong> {{ album.supporto }}</p>
-                    {% endif %}
-                    {% if album.data_rilascio %}
-                        <p class="mb-0"><strong>Data rilascio:</strong> {{ album.data_rilascio|date:"d/m/Y" }}</p>
-                    {% endif %}
-                    {% if album.deposito %}
-                        <p class="mb-0"><strong>Deposito:</strong> {{ album.deposito }}</p>
-                    {% endif %}
-                    <p class="mb-0"><strong>Costo:</strong> €{{ album.costo }}</p>
-                    <p class="mb-0">
-                        <strong>Stato:</strong> 
-                        {% if album.closed %}
-                            <span class="badge bg-success">Completato</span>
+                <div class="col-6 col-lg-2">
+                    <div><strong>Rilascio</strong></div>
+                    <div class="mb-0">{{ album.data_rilascio|date:"d/m/Y" }}</div>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <div><strong>Etichetta</strong></div>
+                    <div class="mb-0">{{ album.editore|default:"-" }}</div>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <div><strong>Catalogo</strong></div>
+                    <div class="mb-0">{{ album.catalogo|default:"-" }}</div>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <div class="d-flex align-items-center justify-content-end">
+                        <span class="me-2 text-end"><strong>{{ album.titolo_album }}</strong></span>
+                        {% if album.copertina.name %}
+                            <img src="{{ album.copertina.url }}" style="max-width:100%" alt="{{ album.titolo_album }}">
                         {% else %}
-                            <span class="badge bg-warning">In corso</span>
+                            <div class="text-muted small">Nessuna copertina</div>
                         {% endif %}
-                    </p>
-                    {% if album.note %}
-                        <p class="mt-2"><strong>Note:</strong> {{ album.note }}</p>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -99,8 +77,8 @@
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
+                                <th scope="col">Size</th>
                                 <th scope="col">#</th>
-                                <th scope="col">Sezione</th>
                                 <th scope="col">Titolo</th>
                                 <th scope="col">Crediti</th>
                                 <th scope="col">Durata</th>
@@ -112,8 +90,8 @@
                         <tbody>
                             {% for brano in brani_album %}
                             <tr>
-                                <th scope="row">{{ brano.progressivo|default:"-" }}</th>
                                 <td>{{ brano.sezione|default:"-" }}</td>
+                                <th scope="row">{{ brano.progressivo|default:"-" }}</th>
                                 <td><strong>{{ brano.titolo_brano }}</strong></td>
                                 <td>{{ brano.crediti|default:"-" }}</td>
                                 <td>{{ brano.durata|default:"-" }}</td>

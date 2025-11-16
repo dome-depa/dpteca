@@ -1,0 +1,80 @@
+{% load static %}
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @page { size: A4; margin: 18mm 14mm 18mm 14mm; }
+      body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; color: #111; }
+      h1 { font-size: 18px; margin: 0 0 12px 0; }
+      .artist { page-break-inside: avoid; margin-bottom: 14px; }
+      .artist-header { background: #f1f1f1; padding: 6px 8px; border-left: 4px solid #444; margin: 10px 0 8px 0; }
+      .artist-title { font-size: 15px; margin: 0; }
+      .album { margin: 6px 0; }
+      .album-table { width: 100%; border-collapse: collapse; }
+      .album-table td { padding: 0; vertical-align: middle; }
+      .title-line { font-size: 12px; }
+      .cover-wrap { width: 52px; height: 52px; }
+      .cover { width: 52px; height: 52px; border: 1px solid #ddd; object-fit: cover; }
+      .meta { font-size: 11px; color: #444; margin-top: 2px; }
+      .meta .lbl { font-weight: 700; color: #222; }
+      .meta .val { font-weight: 400; color: #444; font-style: italic; }
+      .small { color: #666; font-size: 11px; }
+      .hr { border-bottom: 1px solid #ccc; margin: 8px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>Elenco Artisti e Discografie</h1>
+    <div class="small">Generato da MdP</div>
+    <div class="hr"></div>
+
+    {% for artista in artisti %}
+      <div class="artist">
+        <div class="artist-header">
+          <p class="artist-title"><strong>{{ artista.nome_artista }}</strong></p>
+        </div>
+        {% with albums=artista.albums.all %}
+          {% if albums %}
+            {% for album in albums %}
+              <div class="album">
+                <table class="album-table">
+                  <tr>
+                    <td>
+                      <div class="title-line">
+                        <strong>{{ album.titolo_album }}</strong>
+                        {% if album.data_rilascio %}<span class="small">({{ album.data_rilascio|date:"Y" }})</span>{% endif %}
+                      </div>
+                    </td>
+                    <td style="width: 40%; padding-left: 8px;">
+                      <div class="meta">
+                        {% if album.genere %}<span class="lbl">Genere:</span> <span class="val">{{ album.genere }}</span>{% endif %}
+                        {% if album.editore %}{% if album.genere %} • {% endif %}<span class="lbl">Etichetta:</span> <span class="val">{{ album.editore }}</span>{% endif %}
+                        {% if album.catalogo %}{% if album.genere or album.editore %} • {% endif %}<span class="lbl">Catalogo:</span> <span class="val">{{ album.catalogo }}</span>{% endif %}
+                        {% with n=album.brani.count %}
+                          {% if n %}{% if album.genere or album.editore or album.catalogo %} • {% endif %}<span class="lbl">Brani:</span> <span class="val">{{ n }}</span>{% endif %}
+                        {% endwith %}
+                      </div>
+                    </td>
+                    <td style="width: 56px; text-align: right;">
+                      <div class="cover-wrap">
+                        {% if album.copertina %}
+                          <img class="cover" src="{{ album.copertina.url }}" />
+                        {% else %}
+                          <div class="cover"></div>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="small">Nessun album</div>
+          {% endif %}
+        {% endwith %}
+      </div>
+    {% endfor %}
+  </body>
+</html>
+
+

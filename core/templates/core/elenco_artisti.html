@@ -22,7 +22,7 @@
             <div class="row">
                 <div class="col-lg- col-2">
                     {% if artista.foto_artista and artista.foto_artista.url %}
-                        <img src="{{ artista.foto_artista.url }}" style="max-width:100%">  
+                        <img src="{{ artista.foto_artista.url }}" class="artist-photo" alt="{{ artista.nome_artista }}">  
                     {% else %}
                         <div class="text-muted">Nessuna foto</div>
                     {% endif %}
