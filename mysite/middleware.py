@@ -32,6 +32,9 @@ class AutoMigrateMiddleware:
                             # Esegui migrazioni
                             call_command('migrate', '--noinput', verbosity=0)
                             
+                            # Carica dati iniziali se il database è vuoto
+                            self._load_initial_data_if_needed()
+                            
                             # Crea superuser se non esiste
                             self._create_superuser_if_needed()
                             
@@ -43,6 +46,30 @@ class AutoMigrateMiddleware:
                             logger.warning(f"Errore durante inizializzazione automatica: {e}")
 
         return self.get_response(request)
+    
+    def _load_initial_data_if_needed(self):
+        """Carica dati iniziali se il database è vuoto"""
+        from music.models import Artista
+        from pathlib import Path
+        
+        # Controlla se ci sono già dati
+        if Artista.objects.exists():
+            return
+        
+        # Cerca il file data_export.json nella directory del progetto
+        base_dir = Path(__file__).resolve().parent.parent
+        json_file = base_dir / 'data_export.json'
+        
+        if json_file.exists() and json_file.stat().st_size > 10:  # File non vuoto
+            try:
+                call_command('loaddata', str(json_file), verbosity=0)
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info("Dati iniziali caricati con successo")
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Errore durante caricamento dati iniziali: {e}")
     
     def _create_superuser_if_needed(self):
         """Crea un superuser se non esiste già"""
