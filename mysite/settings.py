@@ -35,9 +35,9 @@ render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if render_host and render_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_host)
 
-# Aggiungi anche il dominio generico .onrender.com per sicurezza
-if not any('.onrender.com' in host for host in ALLOWED_HOSTS):
-    ALLOWED_HOSTS.append('*.onrender.com')
+# Aggiungi anche dpteca-2.onrender.com esplicitamente
+if 'dpteca-2.onrender.com' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('dpteca-2.onrender.com')
 
 
 # Application definition
