@@ -14,9 +14,19 @@ from music.models import Artista, Album, Brano
     utilizzando queryset anzichè model (di ListView ) sarà possibile utilizzare filtri pittosto che ordinamenti
 """
 class HomeView(ListView):
-   queryset = Artista.objects.all()
    template_name = "core/homepage.html"
    context_object_name = "lista_artisti"
+   
+   def get_queryset(self):
+       try:
+           return Artista.objects.all()
+       except Exception as e:
+           # Se c'è un errore del database, ritorna una lista vuota
+           # Questo permette all'app di partire anche se il database non è pronto
+           import logging
+           logger = logging.getLogger(__name__)
+           logger.error(f"Errore nel caricamento artisti: {e}")
+           return Artista.objects.none()
 
 class ArtistaView(ListView):
    queryset = Artista.objects.all().order_by("nome_artista")
