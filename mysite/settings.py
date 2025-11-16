@@ -140,14 +140,38 @@ if DATABASE_URL:
             }
         }
 else:
-    # Se DATABASE_URL non è presente, usa SQLite per build/test
+    # Se DATABASE_URL non è presente, usa PostgreSQL locale se disponibile, altrimenti SQLite
     # In produzione su Render, DATABASE_URL deve essere sempre configurato
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+    try:
+        import psycopg2
+        # Prova a connettersi al database PostgreSQL locale
+        test_conn = psycopg2.connect(
+            host=os.environ.get('DB_HOST', 'localhost'),
+            database=os.environ.get('DB_NAME', 'mydbase'),
+            user=os.environ.get('DB_USER', 'postgres'),
+            password=os.environ.get('DB_PASSWORD', 'Feb#56#aio'),
+            port=os.environ.get('DB_PORT', '5432')
+        )
+        test_conn.close()
+        # Se la connessione funziona, usa PostgreSQL
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('DB_NAME', 'mydbase'),
+                'USER': os.environ.get('DB_USER', 'postgres'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', 'Feb#56#aio'),
+                'HOST': os.environ.get('DB_HOST', 'localhost'),
+                'PORT': os.environ.get('DB_PORT', '5432'),
+            }
         }
-    }
+    except Exception:
+        # Se PostgreSQL non è disponibile, usa SQLite
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
