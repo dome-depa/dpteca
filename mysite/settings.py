@@ -30,14 +30,21 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 allowed_hosts_str = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.1.11')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',') if host.strip()]
 
-# Aggiungi automaticamente domini Render se non già presenti
+# Aggiungi sempre domini Render comuni
 render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if render_host and render_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_host)
 
-# Aggiungi anche dpteca-2.onrender.com esplicitamente
+# Aggiungi dpteca-2.onrender.com esplicitamente
 if 'dpteca-2.onrender.com' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('dpteca-2.onrender.com')
+
+# Su Render, accetta anche localhost/127.0.0.1 per proxy interni (solo se DEBUG=True per sicurezza)
+if DEBUG:
+    if '127.0.0.1' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('127.0.0.1')
+    if 'localhost' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('localhost')
 
 
 # Application definition
