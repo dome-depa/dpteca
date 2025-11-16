@@ -96,14 +96,40 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 #    }
 #}
 # Database configuration - supporta sia locale che Render
-import dj_database_url
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', 'postgresql://postgres:Feb#56#aio@localhost:5432/mydbase'),
-        conn_max_age=600
-    )
-}
+try:
+    import dj_database_url
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL:
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600
+            )
+        }
+    else:
+        # Fallback al database locale
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'mydbase',
+                'USER': 'postgres',
+                'PASSWORD': 'Feb#56#aio',
+                'HOST': 'localhost',
+                'PORT': '5432',
+            }
+        }
+except ImportError:
+    # Se dj_database_url non è disponibile, usa configurazione diretta
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'mydbase'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'Feb#56#aio'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
