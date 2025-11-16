@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mme1z!4bu$%hk++z)32t*img87k_f)p#@l@!c4znhi$w^t^@z)'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mme1z!4bu$%hk++z)32t*img87k_f)p#@l@!c4znhi$w^t^@z)')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.11"]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.1.11').split(',')
 
 
 # Application definition
@@ -51,6 +52,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"  # impostazione necessaria pre django_crispy
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Per servire file statici su Render
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -93,15 +95,14 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 #        'NAME': BASE_DIR / 'db.sqlite3',
 #    }
 #}
+# Database configuration - supporta sia locale che Render
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mydbase',
-        'USER': 'postgres',
-        'PASSWORD': 'Feb#56#aio',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', 'postgresql://postgres:Feb#56#aio@localhost:5432/mydbase'),
+        conn_max_age=600
+    )
 }
 
 # Password validation
@@ -140,8 +141,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATICFILES_DIRS = [BASE_DIR / 'static-storage']
-
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Per collectstatic su Render
+
+# WhiteNoise per servire file statici in produzione
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # percorso della cartella fuori dalla cartella di progetto per poterla condividere con altri progetti
 MEDIA_ROOT = BASE_DIR / '../media-serve'
