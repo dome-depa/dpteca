@@ -71,6 +71,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"  # impostazione necessaria pre django_crispy
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Per servire file statici su Render
+    'mysite.middleware.AutoMigrateMiddleware',  # Esegue migrazioni automaticamente su Render Free
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
