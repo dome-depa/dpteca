@@ -96,19 +96,20 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 #    }
 #}
 # Database configuration - supporta sia locale che Render
-try:
-    import dj_database_url
-    DATABASE_URL = os.environ.get('DATABASE_URL')
-    if DATABASE_URL:
-        # Usa DATABASE_URL da Render o variabile d'ambiente
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Usa DATABASE_URL da Render (PostgreSQL)
+    try:
+        import dj_database_url
         DATABASES = {
             'default': dj_database_url.config(
                 default=DATABASE_URL,
                 conn_max_age=600
             )
         }
-    else:
-        # Fallback al database locale (solo per sviluppo)
+    except ImportError:
+        # Fallback se dj_database_url non è disponibile
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql',
@@ -119,16 +120,13 @@ try:
                 'PORT': os.environ.get('DB_PORT', '5432'),
             }
         }
-except (ImportError, Exception) as e:
-    # Se dj_database_url non è disponibile o c'è un errore, usa configurazione diretta
+else:
+    # Se DATABASE_URL non è presente, usa SQLite per build/test
+    # In produzione su Render, DATABASE_URL deve essere sempre configurato
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'mydbase'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'Feb#56#aio'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
