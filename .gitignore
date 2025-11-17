@@ -50,3 +50,6 @@ mailto/
 /*.png
 /*.gif
 
+# Local image directories (not versioned)
+Immagini/
+

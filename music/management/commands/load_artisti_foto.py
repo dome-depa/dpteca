@@ -4,13 +4,13 @@ from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 
-from music.models import Album
+from music.models import Artista
 
 
 class Command(BaseCommand):
     help = (
-        "Associa le immagini di copertina agli album usando i file presenti nella "
-        "directory Immagini/Album (il nome del file deve corrispondere al titolo)"
+        "Associa le immagini degli artisti usando i file presenti nella "
+        "directory Immagini/Artisti (il nome del file deve corrispondere al nome dell'artista)"
     )
 
     SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
@@ -19,24 +19,24 @@ class Command(BaseCommand):
         parser.add_argument(
             "--images-dir",
             type=str,
-            default="Immagini/Album",
-            help="Directory contenente le immagini (default: Immagini/Album)",
+            default="Immagini/Artisti",
+            help="Directory contenente le immagini (default: Immagini/Artisti)",
         )
         parser.add_argument(
             "--overwrite",
             action="store_true",
-            help="Sovrascrive le copertine già presenti",
+            help="Sovrascrive le foto già presenti",
         )
         parser.add_argument(
             "--clear",
             action="store_true",
-            help="Elimina tutte le copertine esistenti prima di ricaricarle",
+            help="Elimina tutte le foto esistenti prima di ricaricarle",
         )
         parser.add_argument(
             "--limit",
             type=int,
             default=None,
-            help="Limita il numero di album processati",
+            help="Limita il numero di artisti processati",
         )
         parser.add_argument(
             "--dry-run",
@@ -55,11 +55,11 @@ class Command(BaseCommand):
             return candidate
         return None
 
-    def _find_image_for_album(self, base_dir: Path, titolo: str) -> Path | None:
-        if not titolo:
+    def _find_image_for_artista(self, base_dir: Path, nome: str) -> Path | None:
+        if not nome:
             return None
 
-        # Normalizza il titolo per la ricerca (rimuovi caratteri problematici)
+        # Normalizza il nome per la ricerca (rimuovi caratteri problematici)
         def normalize_for_search(text):
             # Sostituisci caratteri comuni che possono variare
             text = text.replace('/', ' ').replace(':', ' ').replace('-', ' ')
@@ -68,11 +68,11 @@ class Command(BaseCommand):
             text = ' '.join(text.split())
             return text.strip().lower()
 
-        titolo_normalized = normalize_for_search(titolo)
+        nome_normalized = normalize_for_search(nome)
 
         # Prova prima con il nome esatto
         for ext in self.SUPPORTED_EXTENSIONS:
-            candidate = base_dir / f"{titolo}{ext}"
+            candidate = base_dir / f"{nome}{ext}"
             if candidate.exists():
                 return candidate
         
@@ -81,12 +81,12 @@ class Command(BaseCommand):
             if file_path.is_file() and file_path.suffix.lower() in self.SUPPORTED_EXTENSIONS:
                 file_name_normalized = normalize_for_search(file_path.stem)
                 # Confronta i nomi normalizzati
-                if file_name_normalized == titolo_normalized:
+                if file_name_normalized == nome_normalized:
                     return file_path
-                # Prova anche se il titolo è contenuto nel nome del file o viceversa
-                if titolo_normalized in file_name_normalized or file_name_normalized in titolo_normalized:
-                    # Verifica che la corrispondenza sia significativa (almeno 5 caratteri)
-                    if len(titolo_normalized) >= 5 or len(file_name_normalized) >= 5:
+                # Prova anche se il nome è contenuto nel nome del file o viceversa
+                if nome_normalized in file_name_normalized or file_name_normalized in nome_normalized:
+                    # Verifica che la corrispondenza sia significativa (almeno 3 caratteri)
+                    if len(nome_normalized) >= 3 or len(file_name_normalized) >= 3:
                         return file_path
         
         return None
@@ -108,21 +108,21 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Directory immagini: {images_dir}")
 
-        # Elimina tutte le copertine esistenti se richiesto
+        # Elimina tutte le foto esistenti se richiesto
         if clear:
             if dry_run:
-                self.stdout.write(self.style.WARNING("[DRY RUN] Eliminerei tutte le copertine esistenti"))
+                self.stdout.write(self.style.WARNING("[DRY RUN] Eliminerei tutte le foto esistenti"))
             else:
-                cleared = Album.objects.exclude(copertina='').exclude(copertina__isnull=True).count()
-                Album.objects.all().update(copertina='')
-                self.stdout.write(self.style.SUCCESS(f"Eliminate {cleared} copertine esistenti"))
+                cleared = Artista.objects.exclude(foto_artista='').exclude(foto_artista__isnull=True).count()
+                Artista.objects.all().update(foto_artista='')
+                self.stdout.write(self.style.SUCCESS(f"Eliminate {cleared} foto esistenti"))
 
-        albums = Album.objects.all().order_by("pk")
+        artisti = Artista.objects.all().order_by("pk")
         if limit:
-            albums = albums[:limit]
+            artisti = artisti[:limit]
 
-        total = albums.count()
-        self.stdout.write(f"Album da processare: {total}")
+        total = artisti.count()
+        self.stdout.write(f"Artisti da processare: {total}")
 
         updated = 0
         skipped_missing = 0
@@ -130,19 +130,19 @@ class Command(BaseCommand):
         errors = 0
         preview = 0
 
-        for album in albums:
-            image_path = self._find_image_for_album(images_dir, album.titolo_album)
+        for artista in artisti:
+            image_path = self._find_image_for_artista(images_dir, artista.nome_artista)
             if not image_path:
                 skipped_missing += 1
                 continue
 
-            if album.copertina and not overwrite and not clear:
+            if artista.foto_artista and not overwrite and not clear:
                 skipped_existing += 1
                 continue
 
             if dry_run and preview < 5:
                 self.stdout.write(
-                    f"[Anteprima] {album.titolo_album} <- {image_path.name}"
+                    f"[Anteprima] {artista.nome_artista} <- {image_path.name}"
                 )
                 preview += 1
 
@@ -152,26 +152,26 @@ class Command(BaseCommand):
 
             try:
                 filename = (
-                    f"album_covers/{album.pk}_"
-                    f"{slugify(album.titolo_album)}{image_path.suffix.lower()}"
+                    f"artisti/{artista.pk}_"
+                    f"{slugify(artista.nome_artista)}{image_path.suffix.lower()}"
                 )
                 with image_path.open("rb") as img_file:
-                    album.copertina.save(filename, File(img_file), save=True)
+                    artista.foto_artista.save(filename, File(img_file), save=True)
                 updated += 1
             except Exception as exc:
                 errors += 1
                 self.stdout.write(
                     self.style.ERROR(
-                        f"Errore nel salvare {image_path.name} per '{album.titolo_album}': {exc}"
+                        f"Errore nel salvare {image_path.name} per '{artista.nome_artista}': {exc}"
                     )
                 )
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("=" * 50))
-        self.stdout.write(self.style.SUCCESS("AGGIORNAMENTO COPERTINE COMPLETATO"))
+        self.stdout.write(self.style.SUCCESS("AGGIORNAMENTO FOTO ARTISTI COMPLETATO"))
         self.stdout.write(self.style.SUCCESS("=" * 50))
-        self.stdout.write(f"Album aggiornati: {updated}")
-        self.stdout.write(f"Album saltati (copertina già presente): {skipped_existing}")
-        self.stdout.write(f"Album senza immagine corrispondente: {skipped_missing}")
+        self.stdout.write(f"Artisti aggiornati: {updated}")
+        self.stdout.write(f"Artisti saltati (foto già presente): {skipped_existing}")
+        self.stdout.write(f"Artisti senza immagine corrispondente: {skipped_missing}")
         self.stdout.write(f"Errori: {errors}")
 
