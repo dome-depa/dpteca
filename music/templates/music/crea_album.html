@@ -12,7 +12,10 @@
 {% block content %}
     <div class="row justify-content-center mt-4">
         <div class="col-6">
-            <h2>Crea Nuovo Album di: <strong>{{ artista }}</strong></h2> 
+            <h2>Crea Nuovo Album</h2>
+            <div class="alert alert-info mb-3">
+                <strong>Artista:</strong> {{ artista.nome_artista }}
+            </div>
             <form class="" method="POST" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 {{ form | crispy }}

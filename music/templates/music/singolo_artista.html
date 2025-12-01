@@ -50,15 +50,8 @@
     <div class="card my-3">
         <div class="card-header">
             <div class="row">
-                <div class="col-lg-4 col-4">
+                <div class="col-lg-8 col-8">
                     <h3><strong>Discografia</strong></h3>
-                </div>
-                <div class="col-lg-4 col-4">
-                    <div class="text-center">
-                        {% if request.user.is_staff %}
-                            <a class="btn btn-sm btn-warning my-2 mx-auto" href="{% url 'modifica_artista' pk=artista.pk %}">Modifica Artista</a>
-                        {% endif %}
-                    </div>
                 </div>
                 <div class="col-lg-4 col-4">
                     <div class="text-end">

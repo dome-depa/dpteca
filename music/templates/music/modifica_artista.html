@@ -10,15 +10,33 @@
 {% endblock breadcrumb %}
 
 {% block content %}
-    <div class="row justify-content-center mt-4">
-        <div class="col-6">
-            <h2>Modifica Artista: {{ object.nome_artista }}</h2>
-            <form class="" method="POST" enctype="multipart/form-data" novalidate>
-                {% csrf_token %}
-                {{ form | crispy }}
-                <input type="submit" class="btn btn-info" value="Salva Modifiche">
-                <a href="{% url 'artista_view' object.pk %}" class="btn btn-secondary">Annulla</a>
-            </form>
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card my-3">
+            <div class="card-header">
+                <h3>Modifica Artista: {{ object.nome_artista }}</h3>
+            </div>
+            <div class="card-body">
+                {% if object.foto_artista %}
+                <div class="mb-3">
+                    <label class="form-label">Foto Attuale:</label>
+                    <div>
+                        <img src="{{ object.foto_artista.url }}" class="img-thumbnail" alt="{{ object.nome_artista }}" style="max-width: 200px; max-height: 200px;">
+                    </div>
+                </div>
+                {% endif %}
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a class="btn btn-secondary me-md-2" href="{{ object.get_absolute_url }}">Annulla</a>
+                        <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+</div>
+
 {% endblock content %}

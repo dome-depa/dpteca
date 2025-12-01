@@ -7,12 +7,18 @@ class AlbumModelForm(forms.ModelForm):
     class Meta:
         model = Album
         fields = "__all__"
+        widgets = {
+            'artista_appartenenza': forms.HiddenInput(),
+        }
        
 class BranoModelForm(forms.ModelForm):
 
     class Meta:
         model = Brano
         fields = "__all__"
+        widgets = {
+            'album_appartenenza': forms.HiddenInput(),
+        }
 
 class ArtistaModelForm(forms.ModelForm):
     

@@ -13,7 +13,11 @@
 {% block content %}
     <div class="row justify-content-center mt-4">
         <div class="col-6">
-            <h2>Crea Nuovo brano di: <strong>{{ album.titolo_album }} by {{ album.artista_appartenenza }}</strong></h2> 
+            <h2>Crea Nuovo brano</h2>
+            <div class="alert alert-info mb-3">
+                <strong>Album:</strong> {{ album.titolo_album }}<br>
+                <strong>Artista:</strong> {{ album.artista_appartenenza.nome_artista }}
+            </div>
             <form class="" method="POST" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 {{ form | crispy }}

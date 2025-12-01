@@ -75,7 +75,7 @@ def CreaAlbum(request, pk):
         else:
             messages.error(request, 'Errore di validazione: controlla i campi evidenziati e riprova.')
     else:
-        form = AlbumModelForm()
+        form = AlbumModelForm(initial={'artista_appartenenza': artista})
 
     context = {"form": form, "artista": artista}
     return render(request, "music/crea_album.html", context)
@@ -223,6 +223,25 @@ def report_artisti_pdf(request):
 
             y -= 4 * mm
 
+        # Aggiungi statistiche finali
+        if y < 30 * mm:
+            c.showPage()
+            y = height - y_margin
+        
+        y -= 10 * mm
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(x_margin, y, "Riepilogo")
+        y -= 6 * mm
+        c.setFont("Helvetica", 10)
+        
+        # Conta artisti e album totali (escludendo Classica)
+        total_artisti = Artista.objects.count()
+        total_albums = Album.objects.exclude(genere__iexact="Classica").count()
+        
+        c.drawString(x_margin, y, f"Numero totale artisti: {total_artisti}")
+        y -= 5 * mm
+        c.drawString(x_margin, y, f"Numero totale album: {total_albums}")
+
         c.showPage()
         c.save()
         pdf = buffer.getvalue()
@@ -248,12 +267,19 @@ def report_artisti_pdf(request):
         Prefetch("albums", queryset=albums_ordered),
         "albums__stili",
     ).order_by("nome_artista")
+    
+    # Calcola statistiche totali
+    total_artisti = Artista.objects.count()
+    total_albums = Album.objects.exclude(genere__iexact="Classica").count()
+    
     # ordina gli album per data_rilascio discendente a livello di template
     html = render_to_string(
         "music/report_artisti_albums.html",
         {
             "artisti": artisti,
             "MEDIA_URL": settings.MEDIA_URL,
+            "total_artisti": total_artisti,
+            "total_albums": total_albums,
         },
     )
     response = HttpResponse(content_type="application/pdf")
@@ -274,7 +300,7 @@ def crea_brano(request, pk):
             messages.success(request, f'Brano "{brano.titolo_brano}" aggiunto con successo!')
             return HttpResponseRedirect(album.get_absolute_url())
     else:
-        form = BranoModelForm()
+        form = BranoModelForm(initial={'album_appartenenza': album})
 
     context = {"form": form, "album": album}
     return render(request, "music/crea_brano.html", context)
