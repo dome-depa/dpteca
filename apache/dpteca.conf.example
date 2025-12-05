@@ -1,0 +1,53 @@
+# Esempio di configurazione Apache per Debian
+# Copia questo file in /etc/apache2/sites-available/dpteca.conf
+# e modifica i percorsi e il dominio secondo le tue esigenze
+
+<VirtualHost *:80>
+    ServerName yourdomain.com
+    ServerAlias www.yourdomain.com
+    
+    # Directory del progetto
+    DocumentRoot /home/dpteca/mysite
+    
+    # Directory per file statici
+    Alias /static /home/dpteca/mysite/staticfiles
+    <Directory /home/dpteca/mysite/staticfiles>
+        Require all granted
+    </Directory>
+    
+    # Directory per file media
+    Alias /media /home/dpteca/media-serve
+    <Directory /home/dpteca/media-serve>
+        Require all granted
+    </Directory>
+    
+    # Configurazione WSGI
+    WSGIDaemonProcess dpteca python-home=/home/dpteca/mysite/venv python-path=/home/dpteca/mysite
+    WSGIProcessGroup dpteca
+    WSGIScriptAlias / /home/dpteca/mysite/mysite/wsgi.py
+    
+    <Directory /home/dpteca/mysite/mysite>
+        <Files wsgi.py>
+            Require all granted
+        </Files>
+    </Directory>
+    
+    # Permetti accesso a tutto il progetto
+    <Directory /home/dpteca/mysite>
+        <Files wsgi.py>
+            Require all granted
+        </Files>
+    </Directory>
+    
+    # Log
+    ErrorLog ${APACHE_LOG_DIR}/dpteca_error.log
+    CustomLog ${APACHE_LOG_DIR}/dpteca_access.log combined
+</VirtualHost>
+
+# Configurazione SSL (verrà aggiunta automaticamente da certbot)
+# <VirtualHost *:443>
+#     ServerName yourdomain.com
+#     ServerAlias www.yourdomain.com
+#     ...
+# </VirtualHost>
+
