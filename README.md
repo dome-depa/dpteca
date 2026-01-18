@@ -247,7 +247,7 @@ Progetto personale per gestione collezione musicale.
 
 ## 👨‍💻 Autore
 
-Domenico De Pace - dPteca Project
+Domenico de Paoli - dPteca Project
 
 ---
 
