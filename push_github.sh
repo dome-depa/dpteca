@@ -18,6 +18,12 @@ PUSH_ONLY=0
 SHOW_STATUS=0
 COMMIT_MESSAGE=""
 
+git_cmd() {
+    env -u GIT_ASKPASS -u SSH_ASKPASS -u VSCODE_GIT_ASKPASS_NODE \
+        -u VSCODE_GIT_ASKPASS_MAIN -u VSCODE_GIT_ASKPASS_EXTRA_ARGS \
+        git "$@"
+}
+
 usage() {
     sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
 }
@@ -89,6 +95,46 @@ block_sensitive_files() {
   done <<< "$staged"
 }
 
+push_with_auth() {
+    git_cmd push -u "$REMOTE" "$BRANCH"
+}
+
+sync_with_remote() {
+    echo "📥 Sincronizzazione con $REMOTE/$BRANCH..."
+    git_cmd fetch "$REMOTE" "$BRANCH"
+
+    local behind
+    behind="$(git rev-list --count HEAD.."$REMOTE/$BRANCH" 2>/dev/null || echo 0)"
+    if [[ "${behind:-0}" -gt 0 ]]; then
+        echo "⬇️  Integrazione di $behind commit da GitHub (rebase)..."
+        git_cmd pull --rebase "$REMOTE" "$BRANCH"
+    fi
+}
+
+report_push_failure() {
+    local output="$1"
+    echo "" >&2
+    if grep -qiE 'fetch first|non-fast-forward|rejected' <<< "$output"; then
+        echo "❌ Push rifiutato: su GitHub ci sono commit che non hai in locale." >&2
+        echo "Esegui:" >&2
+        echo "  git pull --rebase origin main" >&2
+        echo "  ./push_github.sh --push-only" >&2
+        return
+    fi
+    if grep -qiE '401|403|authentication|permission denied|invalid credentials' <<< "$output"; then
+        echo "❌ Push fallito: autenticazione GitHub non valida." >&2
+        echo "" >&2
+        echo "Opzioni consigliate:" >&2
+        echo "  1) SSH: aggiungi la chiave pubblica su GitHub → Settings → SSH keys" >&2
+        echo "     cat ~/.ssh/id_ed25519.pub" >&2
+        echo "  2) HTTPS: usa un Personal Access Token al posto della password GitHub" >&2
+        echo "  3) GitHub CLI: gh auth login" >&2
+        return
+    fi
+    echo "❌ Push fallito." >&2
+    echo "$output" >&2
+}
+
 if [[ "$PUSH_ONLY" -eq 0 ]]; then
     if [[ -z "$COMMIT_MESSAGE" ]]; then
         read -r -p "Messaggio di commit: " COMMIT_MESSAGE
@@ -111,6 +157,8 @@ if [[ "$PUSH_ONLY" -eq 0 ]]; then
     fi
 fi
 
+sync_with_remote
+
 LOCAL_COMMITS="$(git rev-list --count "$REMOTE/$BRANCH"..HEAD 2>/dev/null || true)"
 if [[ "${LOCAL_COMMITS:-0}" -eq 0 ]]; then
     echo "ℹ️  Nessun commit locale da inviare su GitHub."
@@ -118,6 +166,13 @@ if [[ "${LOCAL_COMMITS:-0}" -eq 0 ]]; then
 fi
 
 echo "🚀 Push su $REMOTE/$BRANCH ($LOCAL_COMMITS commit)..."
-git push -u "$REMOTE" "$BRANCH"
+PUSH_OUTPUT=""
+if ! PUSH_OUTPUT="$(push_with_auth 2>&1)"; then
+    report_push_failure "$PUSH_OUTPUT"
+    exit 1
+fi
+if [[ -n "$PUSH_OUTPUT" ]]; then
+    echo "$PUSH_OUTPUT"
+fi
 
 echo "✅ Aggiornamento su GitHub completato."
