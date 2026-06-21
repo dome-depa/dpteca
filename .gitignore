@@ -58,4 +58,6 @@ Immagini/
 .env.*
 credentials.json
 *.pem
+token.txt
+Token github/
 
