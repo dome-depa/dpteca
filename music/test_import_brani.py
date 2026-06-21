@@ -186,3 +186,24 @@ class ImportBraniAlbumViewTestCase(TestCase):
         result = import_tracks_for_album(self.album, tracks)
         self.assertEqual(result.created, 2)
         self.assertEqual(self.album.brani.count(), 2)
+
+    def test_import_updates_position_for_existing_track(self):
+        brano = Brano.objects.create(
+            titolo_brano="In the Flesh?",
+            sezione="b",
+            progressivo="9",
+            album_appartenenza=self.album,
+        )
+        tracks = [
+            TrackCandidate("In the Flesh?", "a", "1", "3:19", "Waters"),
+        ]
+
+        result = import_tracks_for_album(self.album, tracks, skip_existing=True)
+
+        brano.refresh_from_db()
+        self.assertEqual(result.updated, 1)
+        self.assertEqual(result.skipped, 0)
+        self.assertEqual(brano.sezione, "a")
+        self.assertEqual(brano.progressivo, "1")
+        self.assertEqual(brano.durata, None)
+        self.assertEqual(brano.crediti, None)

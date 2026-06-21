@@ -4,10 +4,17 @@
 
 set -e  # Esci in caso di errore
 
-echo "🚀 Inizio deploy..."
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
+VENV="$ROOT/venv"
+PYTHON="$VENV/bin/python"
 
-# Attiva ambiente virtuale
-source venv/bin/activate
+if [[ ! -x "$PYTHON" ]]; then
+    echo "Errore: ambiente virtuale non trovato in $VENV" >&2
+    exit 1
+fi
+
+echo "🚀 Inizio deploy..."
 
 # Aggiorna codice da GitHub
 echo "📥 Aggiornamento codice da GitHub..."
@@ -15,15 +22,15 @@ git pull origin main
 
 # Installa/aggiorna dipendenze
 echo "📦 Installazione dipendenze..."
-pip install -r requirements.txt --quiet
+"$PYTHON" -m pip install -r requirements.txt --quiet
 
 # Raccogli file statici
 echo "📁 Raccolta file statici..."
-python manage.py collectstatic --noinput
+"$PYTHON" manage.py collectstatic --noinput
 
 # Esegui migrazioni
 echo "🗄️  Esecuzione migrazioni..."
-python manage.py migrate --noinput
+"$PYTHON" manage.py migrate --noinput
 
 # Riavvia Apache
 echo "🔄 Riavvio Apache..."
