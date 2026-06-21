@@ -43,6 +43,7 @@
                     <strong>Questa azione non può essere annullata!</strong> Il brano verrà eliminato permanentemente dal database.
                 </div>
 
+                {% if request.user.is_authenticated and request.user.is_staff %}
                 <form method="post">
                     {% csrf_token %}
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
@@ -54,6 +55,7 @@
                         </button>
                     </div>
                 </form>
+                {% endif %}
             </div>
         </div>
     </div>

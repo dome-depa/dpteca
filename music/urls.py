@@ -10,8 +10,14 @@ urlpatterns = [
     path('album/<int:pk>/modifica/', views.ModificaAlbum.as_view(), name="modifica_album"),
     path('album/<int:pk>/elimina/', views.EliminaAlbum.as_view(), name="elimina_album"),
     path('album/<int:pk>/crea-brano/', views.crea_brano, name="crea_brano"),
+    path('album/<int:pk>/importa-brani/', views.importa_brani_album, name="importa_brani_album"),
+    path('brano/<int:pk>/ascolta/', views.ascolta_brano, name="ascolta_brano"),
     path('brano/<int:pk>/modifica/', views.ModificaBrano.as_view(), name="modifica_brano"),
     path('brano/<int:pk>/elimina/', views.EliminaBrano.as_view(), name="elimina_brano"),
     path('report/artisti.pdf', views.report_artisti_pdf, name="report_artisti_pdf"),
+    path('album-desiderati/', views.ListaAlbumDesiderati.as_view(), name="album_desiderati"),
+    path('album-desiderati/nuovo/', views.CreaAlbumDesiderato.as_view(), name="crea_album_desiderato"),
+    path('album-desiderati/<int:pk>/modifica/', views.ModificaAlbumDesiderato.as_view(), name="modifica_album_desiderato"),
+    path('album-desiderati/<int:pk>/elimina/', views.EliminaAlbumDesiderato.as_view(), name="elimina_album_desiderato"),
 
 ]

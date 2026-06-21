@@ -53,3 +53,9 @@ mailto/
 # Local image directories (not versioned)
 Immagini/
 
+# Environment and secrets
+.env
+.env.*
+credentials.json
+*.pem
+

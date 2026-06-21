@@ -85,5 +85,19 @@ class Brano(models.Model):
         verbose_name_plural = "Brani"
 
 
+class AlbumDesiderato(models.Model):
+    artista = models.ForeignKey(Artista, on_delete=models.CASCADE, related_name="album_desiderati")
+    titolo_album = models.CharField(max_length=140)
+    copertina = models.ImageField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.artista} - {self.titolo_album}"
+
+    class Meta:
+        verbose_name = "Album desiderato"
+        verbose_name_plural = "Album desiderati"
+        ordering = ["artista__nome_artista", "titolo_album", "copertina"]
+
 
 

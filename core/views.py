@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render
 from django.views.generic.list import ListView
-from django.db.models import Q
+from django.db.models import Q, Case, When, IntegerField
 
 from music.models import Artista, Album, Brano
 
@@ -19,7 +19,7 @@ class HomeView(ListView):
    
    def get_queryset(self):
        try:
-           return Artista.objects.all()
+           return Artista.objects.all().order_by("nome_artista")
        except Exception as e:
            # Se c'è un errore del database, ritorna una lista vuota
            # Questo permette all'app di partire anche se il database non è pronto
@@ -34,7 +34,24 @@ class ArtistaView(ListView):
    context_object_name = "lista_artisti"
 
 class AlbumView(ListView):
-   queryset = Album.objects.all().order_by("artista_appartenenza", "data_rilascio")
+   queryset = (
+       Album.objects.all()
+       .annotate(
+           classica_in_coda=Case(
+               When(genere__iexact="Classica", then=1),
+               default=0,
+               output_field=IntegerField(),
+           )
+       )
+       .order_by(
+           "classica_in_coda",
+           "-genere",
+           "artista_appartenenza__nome_artista",
+           "supporto",
+           "data_rilascio",
+           "titolo_album",
+       )
+   )
    template_name = "core/elenco_album.html"
    context_object_name = "lista_album"
 

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ block.super }} - Modifica album desiderato{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'album_desiderati' %}">Album desiderati</a></li>
+<li class="breadcrumb-item active">Modifica</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-12 col-md-8 col-lg-6">
+        <h2>Modifica album desiderato</h2>
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {{ form|crispy }}
+            {% if request.user.is_authenticated and request.user.is_staff %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a class="btn btn-secondary me-md-2" href="{% url 'album_desiderati' %}">Annulla</a>
+                <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock content %}

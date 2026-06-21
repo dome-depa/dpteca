@@ -13,12 +13,13 @@
     <div class="card my-3">
         <div class="card-header">
             <div class="row">
-                <div class="col-lg-8 col-8">
+                <div class="col-12 col-md-8">
                     <h5>Album: <strong>{{ album.titolo_album }}</strong></h5>
                 </div>
-                <div class="col-lg-4 col-4">
-                    <div class="text-end">
-                        {% if request.user.is_staff %}
+                <div class="col-12 col-md-4">
+                    <div class="text-md-end">
+                        {% if request.user.is_authenticated and request.user.is_staff %}
+                            <a class="btn btn-sm btn-info" href="{% url 'crea_album_desiderato' %}?artista={{ artista.pk }}&titolo={{ album.titolo_album|urlencode }}">Aggiungi a desiderati</a>
                             <a class="btn btn-sm btn-warning" href="{% url 'modifica_album' pk=album.pk %}">Modifica Album</a>
                             <a class="btn btn-sm btn-danger" href="{% url 'elimina_album' pk=album.pk %}">Elimina Album</a>
                         {% endif %}
@@ -45,7 +46,7 @@
                     <div class="d-flex align-items-center justify-content-end">
                         <span class="me-2 text-end"><strong>{{ album.titolo_album }}</strong></span>
                         {% if album.copertina.name %}
-                            <img src="{{ album.copertina.url }}" style="max-width:100%" alt="{{ album.titolo_album }}">
+                            <img src="{{ album.copertina.url }}" class="img-fluid" alt="{{ album.titolo_album }}">
                         {% else %}
                             <div class="text-muted small">Nessuna copertina</div>
                         {% endif %}
@@ -58,12 +59,13 @@
     <div class="card my-3">
         <div class="card-header">
             <div class="row">
-                <div class="col-lg-8 col-8">
+                <div class="col-12 col-md-8">
                     <h3><strong>Brani</strong> <span class="badge bg-info">{{ brani_album.count }}</span></h3>
                 </div>
-                <div class="col-lg-4 col-4">
-                    <div class="text-end">
-                        {% if request.user.is_staff %}
+                <div class="col-12 col-md-4">
+                    <div class="text-md-end">
+                        {% if request.user.is_authenticated and request.user.is_staff %}
+                            <a class="btn btn-sm btn-success my-2" href="{% url 'importa_brani_album' pk=album.pk %}">Importa da internet</a>
                             <a class="btn btn-sm btn-info my-2" href="{% url 'crea_brano' pk=album.pk %}">Aggiungi Brano</a>
                         {% endif %}
                     </div>
@@ -82,7 +84,8 @@
                                 <th scope="col">Titolo</th>
                                 <th scope="col">Crediti</th>
                                 <th scope="col">Durata</th>
-                                {% if request.user.is_staff %}
+                                <th scope="col">Ascolta</th>
+                                {% if request.user.is_authenticated and request.user.is_staff %}
                                 <th scope="col" class="text-center">Azioni</th>
                                 {% endif %}
                             </tr>
@@ -95,7 +98,15 @@
                                 <td><strong>{{ brano.titolo_brano }}</strong></td>
                                 <td>{{ brano.crediti|default:"-" }}</td>
                                 <td>{{ brano.durata|default:"-" }}</td>
-                                {% if request.user.is_staff %}
+                                <td>
+                                    <a class="btn btn-outline-primary btn-sm"
+                                       target="_blank"
+                                       rel="noopener"
+                                       href="{% url 'ascolta_brano' pk=brano.pk %}">
+                                        Ascolta
+                                    </a>
+                                </td>
+                                {% if request.user.is_authenticated and request.user.is_staff %}
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="{% url 'modifica_brano' pk=brano.pk %}" 
@@ -118,7 +129,7 @@
                 </div>
             {% else %}
                 <p class="text-muted">Nessun brano disponibile per questo album.</p>
-                {% if request.user.is_staff %}
+                {% if request.user.is_authenticated and request.user.is_staff %}
                     <p>Clicca su "Aggiungi Brano" per iniziare ad aggiungere i brani.</p>
                 {% endif %}
             {% endif %}

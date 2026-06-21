@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}{{ block.super }} - Album desiderati{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Album desiderati</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mt-3">
+    <h2 class="mb-0">Album desiderati</h2>
+    {% if request.user.is_authenticated and request.user.is_staff %}
+        <a class="btn btn-sm btn-info" href="{% url 'crea_album_desiderato' %}">
+            + Aggiungi
+        </a>
+    {% endif %}
+</div>
+
+<div class="card my-3">
+    <div class="card-body">
+        {% if album_desiderati %}
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Artista</th>
+                            <th>Album</th>
+                            <th>Copertina</th>
+                            {% if request.user.is_authenticated and request.user.is_staff %}
+                            <th class="text-center">Azioni</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for album in album_desiderati %}
+                        <tr>
+                            <td>
+                                <a href="{{ album.artista.get_absolute_url }}">{{ album.artista.nome_artista }}</a>
+                            </td>
+                            <td>{{ album.titolo_album }}</td>
+                            <td style="width: 120px;">
+                                {% if album.copertina %}
+                                    <img src="{{ album.copertina.url }}" class="img-fluid" alt="{{ album.titolo_album }}">
+                                {% else %}
+                                    <span class="text-muted small">Nessuna copertina</span>
+                                {% endif %}
+                            </td>
+                            {% if request.user.is_authenticated and request.user.is_staff %}
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'modifica_album_desiderato' pk=album.pk %}" class="btn btn-outline-primary">
+                                        Modifica
+                                    </a>
+                                    <a href="{% url 'elimina_album_desiderato' pk=album.pk %}" class="btn btn-outline-danger">
+                                        Elimina
+                                    </a>
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info mb-0" role="alert">
+                Nessun album desiderato presente.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

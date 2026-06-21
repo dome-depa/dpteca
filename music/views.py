@@ -1,20 +1,29 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.list import ListView
 from django.http import HttpResponseRedirect
 from django.http import HttpResponse
 from django.urls import reverse
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.template.loader import render_to_string
 from django.conf import settings
 import os
 from django.urls import reverse_lazy
 from io import BytesIO
 
-from .forms import AlbumModelForm, BranoModelForm, ArtistaModelForm
+from .forms import AlbumModelForm, BranoModelForm, ArtistaModelForm, AlbumDesideratoForm
 from django.db.models import Prefetch, Case, When, IntegerField
 
 from .mixins import StaffMixing
-from .models import Artista, Album, Brano
+from .models import Artista, Album, Brano, AlbumDesiderato
+from .services.brani_import import import_tracks_for_album
+from .services.musicbrainz import (
+    MusicBrainzError,
+    get_release_tracks,
+    search_releases,
+)
+from .services.listening import find_bandcamp_url, youtube_search_url
 
 # Create your views here.
 
@@ -56,11 +65,26 @@ def VisualizzaArtista(request, pk):
     artista = get_object_or_404(Artista, pk=pk)
     albums_artista = Album.objects.filter(
         artista_appartenenza = artista
-        ).order_by("-data_rilascio")
+        ).annotate(
+            classica_in_coda=Case(
+                When(genere__iexact="Classica", then=1),
+                default=0,
+                output_field=IntegerField(),
+            )
+        ).order_by(
+            "classica_in_coda",
+            "-genere",
+            "artista_appartenenza__nome_artista",
+            "supporto",
+            "data_rilascio",
+            "titolo_album",
+        )
     context = {"artista": artista, "discografia": albums_artista}
     return render(request, "music/singolo_artista.html", context)
 
 
+@login_required
+@user_passes_test(lambda u: u.is_staff)
 def CreaAlbum(request, pk):
     artista = get_object_or_404(Artista, pk=pk)
     if request.method == "POST":
@@ -90,6 +114,32 @@ def VisualizzaAlbum(request, pk):
     context = {"album": album, "artista": artista, "brani_album": brani_album}
     
     return render(request, "music/singolo_album.html", context)
+
+
+def ascolta_brano(request, pk):
+    brano = get_object_or_404(
+        Brano.objects.select_related("album_appartenenza__artista_appartenenza"),
+        pk=pk,
+    )
+    album = brano.album_appartenenza
+    artista = album.artista_appartenenza
+    artist_name = artista.nome_artista
+    album_title = album.titolo_album
+    track_title = brano.titolo_brano
+    search_query = f"{artist_name} {album_title} {track_title}".strip()
+
+    bandcamp_url = find_bandcamp_url(artist_name, album_title, track_title)
+    if bandcamp_url:
+        return redirect(bandcamp_url)
+
+    context = {
+        "brano": brano,
+        "album": album,
+        "artista": artista,
+        "search_query": search_query,
+        "youtube_url": youtube_search_url(artist_name, album_title, track_title),
+    }
+    return render(request, "music/ascolta_brano.html", context)
 
 
 def _link_callback(uri, rel):
@@ -149,18 +199,24 @@ def report_artisti_pdf(request):
             y -= 6 * mm
             c.setFont("Helvetica", 10)
 
-            # albums: esclude "Classica", poi ordina non-classica prima di classica (se presente in stringa), quindi per data
+            # albums: include "Classica" in coda, poi ordina per genere (Z->A), artista, supporto, anno, titolo
             albums_qs = (
                 Album.objects.filter(artista_appartenenza=artista)
-                .exclude(genere__iexact="Classica")
                 .annotate(
-                    genere_is_classico=Case(
-                        When(genere__icontains="classica", then=1),
+                    classica_in_coda=Case(
+                        When(genere__iexact="Classica", then=1),
                         default=0,
                         output_field=IntegerField(),
                     )
                 )
-                .order_by("genere_is_classico", "data_rilascio")
+                .order_by(
+                    "classica_in_coda",
+                    "-genere",
+                    "artista_appartenenza__nome_artista",
+                    "supporto",
+                    "data_rilascio",
+                    "titolo_album",
+                )
             )
             for album in albums_qs:
                 if y < 30 * mm:
@@ -250,18 +306,24 @@ def report_artisti_pdf(request):
         response["Content-Disposition"] = 'inline; filename="artisti_albums.pdf"'
         response.write(pdf)
         return response
-    # Esclude gli album con genere "Classica", poi ordina: non-classica prima, quindi per data_rilascio
+    # Include "Classica" in coda, poi ordina per genere (Z->A), artista, supporto, anno, titolo
     albums_ordered = (
         Album.objects.all()
-        .exclude(genere__iexact="Classica")
         .annotate(
-            genere_is_classico=Case(
-                When(genere__icontains="classica", then=1),
+            classica_in_coda=Case(
+                When(genere__iexact="Classica", then=1),
                 default=0,
                 output_field=IntegerField(),
             )
         )
-        .order_by("genere_is_classico", "data_rilascio")
+        .order_by(
+            "classica_in_coda",
+            "-genere",
+            "artista_appartenenza__nome_artista",
+            "supporto",
+            "data_rilascio",
+            "titolo_album",
+        )
     )
     artisti = Artista.objects.all().prefetch_related(
         Prefetch("albums", queryset=albums_ordered),
@@ -289,6 +351,81 @@ def report_artisti_pdf(request):
         return HttpResponse("Errore nella generazione del PDF", status=500)
     return response
 
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def importa_brani_album(request, pk):
+    album = get_object_or_404(Album, pk=pk)
+    artista = album.artista_appartenenza
+    release_mbid = request.GET.get("release_mbid") or request.POST.get("release_mbid")
+    release_date = album.data_rilascio.isoformat() if album.data_rilascio else None
+
+    if request.method == "POST" and release_mbid:
+        skip_existing = request.POST.get("skip_existing") == "on"
+        update_existing = request.POST.get("update_existing") == "on"
+        try:
+            tracks = get_release_tracks(release_mbid)
+        except MusicBrainzError as exc:
+            messages.error(request, str(exc))
+            return redirect("importa_brani_album", pk=album.pk)
+
+        if not tracks:
+            messages.warning(request, "Nessun brano trovato per la release selezionata.")
+            return redirect("importa_brani_album", pk=album.pk)
+
+        result = import_tracks_for_album(
+            album,
+            tracks,
+            skip_existing=skip_existing,
+            update_existing=update_existing,
+        )
+        messages.success(
+            request,
+            f"Import completato: {result.created} creati, "
+            f"{result.updated} aggiornati, {result.skipped} saltati.",
+        )
+        return redirect("album_view", pk=album.pk)
+
+    releases = []
+    tracks = []
+    selected_release = None
+    api_error = None
+
+    try:
+        releases = search_releases(
+            artista.nome_artista,
+            album.titolo_album,
+            release_date,
+        )
+        if release_mbid:
+            tracks = get_release_tracks(release_mbid)
+            selected_release = next(
+                (candidate for candidate in releases if candidate.mbid == release_mbid),
+                None,
+            )
+    except MusicBrainzError as exc:
+        api_error = str(exc)
+
+    existing_titles = {
+        title.lower()
+        for title in album.brani.values_list("titolo_brano", flat=True)
+    }
+
+    context = {
+        "album": album,
+        "artista": artista,
+        "releases": releases,
+        "tracks": tracks,
+        "selected_release": selected_release,
+        "release_mbid": release_mbid,
+        "api_error": api_error,
+        "existing_titles": existing_titles,
+        "existing_count": album.brani.count(),
+    }
+    return render(request, "music/importa_brani_album.html", context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
 def crea_brano(request, pk):
     album = get_object_or_404(Album, pk=pk)
     if request.method == "POST":
@@ -354,3 +491,56 @@ class EliminaAlbum(StaffMixing, DeleteView):
     def get_success_url(self):
         # Dopo l'eliminazione dell'album, torna alla pagina dell'artista
         return self.object.artista_appartenenza.get_absolute_url()
+
+
+class ListaAlbumDesiderati(ListView):
+    model = AlbumDesiderato
+    template_name = "music/album_desiderati.html"
+    context_object_name = "album_desiderati"
+
+    def get_queryset(self):
+        return (
+            AlbumDesiderato.objects.select_related("artista")
+            .order_by("artista__nome_artista", "titolo_album", "copertina")
+        )
+
+
+class CreaAlbumDesiderato(StaffMixing, CreateView):
+    model = AlbumDesiderato
+    form_class = AlbumDesideratoForm
+    template_name = "music/crea_album_desiderato.html"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        artista_id = self.request.GET.get("artista")
+        titolo = self.request.GET.get("titolo")
+        if artista_id:
+            initial["artista"] = artista_id
+        if titolo:
+            initial["titolo_album"] = titolo
+        return initial
+
+    def get_success_url(self):
+        return reverse("album_desiderati")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["artisti"] = Artista.objects.all().order_by("nome_artista")
+        return context
+
+
+class ModificaAlbumDesiderato(StaffMixing, UpdateView):
+    model = AlbumDesiderato
+    form_class = AlbumDesideratoForm
+    template_name = "music/modifica_album_desiderato.html"
+
+    def get_success_url(self):
+        return reverse("album_desiderati")
+
+
+class EliminaAlbumDesiderato(StaffMixing, DeleteView):
+    model = AlbumDesiderato
+    template_name = "music/elimina_album_desiderato.html"
+
+    def get_success_url(self):
+        return reverse("album_desiderati")

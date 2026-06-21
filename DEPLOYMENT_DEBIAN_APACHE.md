@@ -1,6 +1,6 @@
 # Guida al Deployment su Debian con Apache
 
-Questa guida ti accompagna passo-passo per migrare il progetto Django da Render a un server Linux Debian con Apache e PostgreSQL.
+Questa guida ti accompagna passo-passo per configurare il progetto Django su un server Linux Debian con Apache e PostgreSQL.
 
 ---
 
@@ -105,8 +105,8 @@ sudo su - dpteca
 
 ```bash
 cd /home/dpteca
-git clone https://github.com/dome-depa/dpteca.git mysite
-cd mysite
+git clone https://github.com/dome-depa/dpteca.git dpteca
+cd dpteca
 ```
 
 ### 3.3 Crea ambiente virtuale
@@ -126,7 +126,7 @@ pip install -r requirements.txt
 ### 3.5 Crea directory per file statici e media
 
 ```bash
-mkdir -p /home/dpteca/mysite/staticfiles
+mkdir -p /home/dpteca/dpteca/staticfiles
 mkdir -p /home/dpteca/media-serve
 chmod -R 755 /home/dpteca/media-serve
 ```
@@ -138,7 +138,7 @@ chmod -R 755 /home/dpteca/media-serve
 ### 4.1 Crea file `.env` per variabili d'ambiente
 
 ```bash
-cd /home/dpteca/mysite
+cd /home/dpteca/dpteca
 nano .env
 ```
 
@@ -165,7 +165,7 @@ python3 -c "from django.core.management.utils import get_random_secret_key; prin
 
 ### 4.2 Modifica `settings.py` per caricare `.env`
 
-Aggiungi all'inizio di `mysite/settings.py`:
+Aggiungi all'inizio di `dpteca/settings.py`:
 
 ```python
 from pathlib import Path
@@ -258,11 +258,11 @@ Aggiungi:
     ServerAlias www.tudominio.com
     
     # Directory del progetto
-    DocumentRoot /home/dpteca/mysite
+    DocumentRoot /home/dpteca/dpteca
     
     # Directory per file statici
-    Alias /static /home/dpteca/mysite/staticfiles
-    <Directory /home/dpteca/mysite/staticfiles>
+    Alias /static /home/dpteca/dpteca/staticfiles
+    <Directory /home/dpteca/dpteca/staticfiles>
         Require all granted
     </Directory>
     
@@ -273,18 +273,18 @@ Aggiungi:
     </Directory>
     
     # Configurazione WSGI
-    WSGIDaemonProcess dpteca python-home=/home/dpteca/mysite/venv python-path=/home/dpteca/mysite
+    WSGIDaemonProcess dpteca python-home=/home/dpteca/dpteca/venv python-path=/home/dpteca/dpteca
     WSGIProcessGroup dpteca
-    WSGIScriptAlias / /home/dpteca/mysite/mysite/wsgi.py
+    WSGIScriptAlias / /home/dpteca/dpteca/dpteca/wsgi.py
     
-    <Directory /home/dpteca/mysite/mysite>
+    <Directory /home/dpteca/dpteca/dpteca>
         <Files wsgi.py>
             Require all granted
         </Files>
     </Directory>
     
     # Permetti accesso a tutto il progetto
-    <Directory /home/dpteca/mysite>
+    <Directory /home/dpteca/dpteca>
         <Files wsgi.py>
             Require all granted
         </Files>
@@ -293,6 +293,19 @@ Aggiungi:
     # Log
     ErrorLog ${APACHE_LOG_DIR}/dpteca_error.log
     CustomLog ${APACHE_LOG_DIR}/dpteca_access.log combined
+</VirtualHost>
+```
+
+Se il progetto deve vivere su un sottodominio (es. `dpteca.casanausicaa.it`) e
+sullo stesso IP è già attiva un'altra applicazione, crea un VirtualHost
+separato con un `ServerName` dedicato. In questo modo Apache distingue le app
+tramite name-based virtual hosting.
+
+Esempio rapido:
+```apache
+<VirtualHost *:80>
+    ServerName dpteca.casanausicaa.it
+    # ... stesse direttive di sopra ...
 </VirtualHost>
 ```
 
@@ -357,7 +370,7 @@ Aggiungi:
 
 ```bash
 #!/bin/bash
-cd /home/dpteca/mysite
+cd /home/dpteca/dpteca
 source venv/bin/activate
 git pull origin main
 pip install -r requirements.txt --quiet
@@ -380,9 +393,9 @@ chmod +x /home/dpteca/deploy.sh
 ### 8.1 Permessi file
 
 ```bash
-sudo chown -R dpteca:www-data /home/dpteca/mysite
+sudo chown -R dpteca:www-data /home/dpteca/dpteca
 sudo chown -R dpteca:www-data /home/dpteca/media-serve
-sudo chmod -R 755 /home/dpteca/mysite
+sudo chmod -R 755 /home/dpteca/dpteca
 sudo chmod -R 755 /home/dpteca/media-serve
 ```
 
@@ -439,8 +452,10 @@ sudo apache2ctl configtest
 ### Errori di permessi
 
 ```bash
-sudo chown -R dpteca:www-data /home/dpteca/mysite
-sudo chmod -R 755 /home/dpteca/mysite
+sudo chown -R dpteca:www-data /home/dpteca/dpteca
+sudo chmod -R 755 /home/dpteca/dpteca
+sudo chown -R dpteca:www-data /home/dpteca/dpteca
+sudo chmod -R 755 /home/dpteca/dpteca
 ```
 
 ### Database non si connette
@@ -476,7 +491,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/home/dpteca/mysite/django.log',
+            'filename': '/home/dpteca/dpteca/django.log',
         },
     },
     'loggers': {
@@ -520,4 +535,11 @@ LOGGING = {
 ---
 
 **Buon deploy! 🚀**
+
+
+
+
+
+
+
 

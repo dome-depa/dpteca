@@ -41,13 +41,13 @@ Sistema di gestione per collezioni musicali sviluppato con Django 5.2.7.
 ## 🗂️ Struttura del Progetto
 
 ```
-mysite/
+dpteca/
 ├── accounts/           # App gestione utenti
 ├── core/              # App principale (homepage, liste, ricerca)
 ├── music/             # App gestione musicale (artisti, album, brani)
 ├── templates/         # Template globali
 ├── static-storage/    # File statici CSS
-└── mysite/           # Configurazione Django
+└── dpteca/           # Configurazione Django
 ```
 
 ## 🎵 Modelli Database
@@ -95,13 +95,13 @@ mysite/
 1. **Clona il repository**
 ```bash
 git clone <repository-url>
-cd mysite
+cd dpteca
 ```
 
 2. **Crea e attiva l'ambiente virtuale**
 ```bash
-python3 -m venv my-env
-source my-env/bin/activate  # Su Windows: my-env\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate  # Su Windows: venv\Scripts\activate
 ```
 
 3. **Installa le dipendenze**
@@ -189,7 +189,7 @@ python manage.py test music.tests.AlbumBraniTestCase -v 2
 - **Backend**: Django 5.2.7
 - **Frontend**: Bootstrap 5.2.3
 - **Forms**: Django Crispy Forms + Crispy Bootstrap 5
-- **Database**: SQLite (development), PostgreSQL (production ready)
+- **Database**: PostgreSQL (required)
 - **Template Engine**: Django Templates
 - **CSS Custom**: dPteca.css
 - **Testing**: Django TestCase (33 test passing)

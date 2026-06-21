@@ -14,16 +14,16 @@
         <div class="card my-3">
             <div class="card-header">
                 <div class="row">
-                    <div class="col-lg-2 col-2">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         {% if album.copertina.name %}
                             <a href="{{ album.get_absolute_url }}">
-                                <img src="{{ album.copertina.url }}" style="max-width:100%" alt="{{ album.titolo_album }}">
+                                <img src="{{ album.copertina.url }}" class="img-fluid" alt="{{ album.titolo_album }}">
                             </a>
                         {% else %}
                             <div class="text-muted small">Nessuna copertina</div>
                         {% endif %}
                     </div>
-                    <div class="col-lg-8 col-8"> 
+                    <div class="col-12 col-md-8"> 
                         <h5>
                             <a href="{{ album.get_absolute_url }}"><strong>{{ album.titolo_album }}</strong></a>  
                             <span class="text-muted">by</span>  
@@ -47,7 +47,7 @@
                             <p class="mb-0 text-muted small">Genere: {{ album.genere }}</p>
                         {% endif %}
                     </div>
-                    <div class="col-lg-2 col-2 d-flex align-items-center justify-content-center">
+                    <div class="col-12 col-md-2 d-flex align-items-center justify-content-center mt-2 mt-md-0">
                         <a href="{{ album.get_absolute_url }}" class="btn btn-primary btn-sm">
                             <i class="bi bi-music-note-list"></i> Vedi Brani
                         </a>

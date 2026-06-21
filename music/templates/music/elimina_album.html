@@ -23,6 +23,7 @@
         <p>Nessun brano associato sarà eliminato.</p>
       {% endif %}
     {% endwith %}
+    {% if request.user.is_authenticated and request.user.is_staff %}
     <form method="post">
       {% csrf_token %}
       <div class="d-flex justify-content-end">
@@ -30,6 +31,7 @@
         <button type="submit" class="btn btn-danger">Elimina</button>
       </div>
     </form>
+    {% endif %}
   </div>
 </div>
 {% endblock content %}

@@ -11,7 +11,7 @@
 
 {% block content %}
     <div class="row justify-content-center mt-4">
-        <div class="col-6">
+        <div class="col-12 col-md-8 col-lg-6">
             <h2>Crea Nuovo Album</h2>
             <div class="alert alert-info mb-3">
                 <strong>Artista:</strong> {{ artista.nome_artista }}
@@ -19,7 +19,9 @@
             <form class="" method="POST" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 {{ form | crispy }}
+                {% if request.user.is_authenticated and request.user.is_staff %}
                 <input type="submit" class="btn btn-info" value="Inserisci!">
+                {% endif %}
             </form>
         </div>
     </div>

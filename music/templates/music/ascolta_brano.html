@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block head_title %}{{ block.super }} - Ascolta {{ brano.titolo_brano }}{% endblock head_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'artista_list' %}">Lista Artisti</a></li>
+<li class="breadcrumb-item"><a href="{% url 'artista_view' pk=artista.pk %}">{{ artista.nome_artista }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'album_view' pk=album.pk %}">{{ album.titolo_album }}</a></li>
+<li class="breadcrumb-item active">Ascolta</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card my-3">
+            <div class="card-body text-center py-5">
+                <div id="listen-loading">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Ricerca...</span>
+                    </div>
+                    <h4 class="mb-2">Ricerca del brano in corso</h4>
+                    <p class="text-muted mb-0">
+                        <strong>{{ brano.titolo_brano }}</strong><br>
+                        {{ artista.nome_artista }} — {{ album.titolo_album }}
+                    </p>
+                    <p class="small text-muted mt-3 mb-0">Prima su Bandcamp, poi su YouTube.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const searchQuery = "{{ search_query|escapejs }}";
+    const youtubeUrl = "{{ youtube_url|escapejs }}";
+
+    async function tryBandcampInBrowser() {
+        const endpoint = new URL("https://bandcamp.com/api/fuzzysearch/1/app_autocomplete");
+        endpoint.searchParams.set("q", searchQuery);
+        endpoint.searchParams.set("item_type", "t");
+
+        const response = await fetch(endpoint.toString(), {
+            method: "GET",
+            credentials: "omit",
+        });
+        if (!response.ok) {
+            return null;
+        }
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+            return null;
+        }
+        const data = await response.json();
+        const results = data.results || [];
+        const track = results.find(function (item) {
+            return item.itemtype === "t" && item.url;
+        });
+        return track ? track.url : null;
+    }
+
+    async function resolveListenUrl() {
+        try {
+            const bandcampUrl = await tryBandcampInBrowser();
+            if (bandcampUrl) {
+                window.location.replace(bandcampUrl);
+                return;
+            }
+        } catch (error) {
+            // passa al fallback YouTube
+        }
+
+        window.location.replace(youtubeUrl);
+    }
+
+    resolveListenUrl();
+})();
+</script>
+{% endblock extra_js %}

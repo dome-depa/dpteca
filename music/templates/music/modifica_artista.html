@@ -22,17 +22,19 @@
                 <div class="mb-3">
                     <label class="form-label">Foto Attuale:</label>
                     <div>
-                        <img src="{{ object.foto_artista.url }}" class="img-thumbnail" alt="{{ object.nome_artista }}" style="max-width: 200px; max-height: 200px;">
+                        <img src="{{ object.foto_artista.url }}" class="img-thumbnail img-fluid" alt="{{ object.nome_artista }}" style="max-width: 200px; max-height: 200px;">
                     </div>
                 </div>
                 {% endif %}
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     {{ form|crispy }}
+                    {% if request.user.is_authenticated and request.user.is_staff %}
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a class="btn btn-secondary me-md-2" href="{{ object.get_absolute_url }}">Annulla</a>
                         <button type="submit" class="btn btn-primary">Salva Modifiche</button>
                     </div>
+                    {% endif %}
                 </form>
             </div>
         </div>

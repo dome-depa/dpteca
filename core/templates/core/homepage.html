@@ -29,14 +29,14 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-lg- col-2">
+                    <div class="col-12 col-md-3">
                         {% if artista.foto_artista.name %}
-                            <img src="{{ artista.foto_artista.url }}" style="max-width:100%">  
+                            <img src="{{ artista.foto_artista.url }}" class="img-fluid" alt="{{ artista.nome_artista }}">  
                         {% else %}
                             <div class="text-muted">Nessuna foto</div>
                         {% endif %}
                     </div>
-                    <div class="col-lg-8 col-8"> 
+                    <div class="col-12 col-md-9"> 
                         <P>{{ artista.profilo }}</P>
                     </div>
                 </div>

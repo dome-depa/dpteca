@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build script per Render
+# Build script per deployment
 
 set -o errexit  # Exit on error
 

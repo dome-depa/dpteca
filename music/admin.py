@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Artista, Album, Brano, Stile
+from .models import Artista, Album, Brano, Stile, AlbumDesiderato
 
 # Register your models here.
 
@@ -20,9 +20,17 @@ class BranoModelAdmin(admin.ModelAdmin):
 class ArtistaModelAdmin(admin.ModelAdmin):
     model = Artista
     list_display = ["nome_artista", "componenti", "sites"]
+
+
+class AlbumDesideratoAdmin(admin.ModelAdmin):
+    model = AlbumDesiderato
+    list_display = ["titolo_album", "artista", "created_at"]
+    search_fields = ["titolo_album", "artista__nome_artista"]
+    list_filter = ["artista"]
     
    
 admin.site.register(Stile)
 admin.site.register(Artista, ArtistaModelAdmin)
 admin.site.register(Album, AlbumModelAdmin)
 admin.site.register(Brano, BranoModelAdmin)
+admin.site.register(AlbumDesiderato, AlbumDesideratoAdmin)

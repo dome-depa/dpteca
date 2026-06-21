@@ -9,9 +9,11 @@
 
 {% block content %}
 
+{% if request.user.is_authenticated and request.user.is_staff %}
 <div class="card-body">
     <a class="btn btn-sm btn-info mt-2 mb-1" href="{% url 'crea_artista'%}"> + Artista</a>
 </div>
+{% endif %}
 
 {% for artista in lista_artisti %}  
     <div class="card my-1">
@@ -20,9 +22,9 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-lg- col-2">
+                <div class="col-12 col-md-3">
                     {% if artista.foto_artista and artista.foto_artista.url %}
-                        <img src="{{ artista.foto_artista.url }}" class="artist-photo" alt="{{ artista.nome_artista }}">  
+                        <img src="{{ artista.foto_artista.url }}" class="artist-photo img-fluid" alt="{{ artista.nome_artista }}">  
                     {% else %}
                         <div class="text-muted">Nessuna foto</div>
                     {% endif %}
@@ -30,7 +32,7 @@
                     <p class="mb-0">Album completati: {{ artista.get_albums_closed }}</p>
 
                 </div>
-                <div class="col-lg-8 col-8"> 
+                <div class="col-12 col-md-9"> 
                     <P>{{ artista.profilo }}</P>
                 </div>
             </div>

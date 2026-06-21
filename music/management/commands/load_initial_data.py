@@ -1,6 +1,6 @@
 """
 Comando per caricare dati iniziali dal file data_export.json
-Utile per popolare il database su Render dopo il deploy
+Utile per popolare il database dopo il deploy
 """
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
