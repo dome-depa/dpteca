@@ -13,9 +13,10 @@ class AlbumModelAdmin(admin.ModelAdmin):
     
 class BranoModelAdmin(admin.ModelAdmin):
     model = Brano
-    list_display = ["titolo_brano", "album_appartenenza", "sezione", "progressivo", "durata"]
+    list_display = ["titolo_brano", "album_appartenenza", "sezione", "progressivo", "durata", "ascolto_fonte"]
     search_fields = ["titolo_brano", "album_appartenenza"]
-    list_filter = ["titolo_brano", "album_appartenenza"]
+    list_filter = ["titolo_brano", "album_appartenenza", "ascolto_fonte"]
+    readonly_fields = ["ascolto_url", "ascolto_fonte"]
 
 class ArtistaModelAdmin(admin.ModelAdmin):
     model = Artista

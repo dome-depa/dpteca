@@ -178,3 +178,6 @@ MUSICBRAINZ_USER_AGENT = os.environ.get(
     'MUSICBRAINZ_USER_AGENT',
     'DPTeca/1.0 (https://dpteca.casanausicaa.it)',
 )
+
+# Chiave YouTube Data API v3 (opzionale): senza chiave si usa la pagina di ricerca.
+YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY', '')

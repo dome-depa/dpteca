@@ -13,6 +13,10 @@ class ImportResult:
     skipped: int = 0
 
 
+def _is_empty(value: str | None) -> bool:
+    return value is None or not str(value).strip()
+
+
 def _apply_track_position(brano: Brano, track: TrackCandidate) -> bool:
     changed = False
     if brano.sezione != track.sezione:
@@ -20,6 +24,39 @@ def _apply_track_position(brano: Brano, track: TrackCandidate) -> bool:
         changed = True
     if brano.progressivo != track.progressivo:
         brano.progressivo = track.progressivo
+        changed = True
+    return changed
+
+
+def _apply_track_metadata(
+    brano: Brano,
+    track: TrackCandidate,
+    *,
+    fill_missing: bool,
+    overwrite: bool,
+) -> bool:
+    changed = False
+
+    if overwrite:
+        if brano.titolo_brano != track.titolo_brano:
+            brano.titolo_brano = track.titolo_brano
+            changed = True
+        if brano.durata != track.durata:
+            brano.durata = track.durata
+            changed = True
+        if brano.crediti != track.crediti:
+            brano.crediti = track.crediti
+            changed = True
+        return changed
+
+    if not fill_missing:
+        return False
+
+    if _is_empty(brano.durata) and not _is_empty(track.durata):
+        brano.durata = track.durata
+        changed = True
+    if _is_empty(brano.crediti) and not _is_empty(track.crediti):
+        brano.crediti = track.crediti
         changed = True
     return changed
 
@@ -42,18 +79,12 @@ def import_tracks_for_album(
         if existing:
             brano = existing
             position_changed = _apply_track_position(brano, track)
-            metadata_changed = False
-
-            if update_existing or not skip_existing:
-                if brano.titolo_brano != track.titolo_brano:
-                    brano.titolo_brano = track.titolo_brano
-                    metadata_changed = True
-                if brano.durata != track.durata:
-                    brano.durata = track.durata
-                    metadata_changed = True
-                if brano.crediti != track.crediti:
-                    brano.crediti = track.crediti
-                    metadata_changed = True
+            metadata_changed = _apply_track_metadata(
+                brano,
+                track,
+                fill_missing=True,
+                overwrite=update_existing or not skip_existing,
+            )
 
             if position_changed or metadata_changed:
                 with transaction.atomic():

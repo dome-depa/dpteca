@@ -15,7 +15,7 @@ class BranoModelForm(forms.ModelForm):
 
     class Meta:
         model = Brano
-        fields = "__all__"
+        exclude = ["ascolto_url", "ascolto_fonte"]
         widgets = {
             'album_appartenenza': forms.HiddenInput(),
         }

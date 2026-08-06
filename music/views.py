@@ -23,7 +23,7 @@ from .services.musicbrainz import (
     get_release_tracks,
     search_releases,
 )
-from .services.listening import find_bandcamp_url, youtube_search_url
+from .services.listening import resolve_listen_url
 
 # Create your views here.
 
@@ -121,25 +121,9 @@ def ascolta_brano(request, pk):
         Brano.objects.select_related("album_appartenenza__artista_appartenenza"),
         pk=pk,
     )
-    album = brano.album_appartenenza
-    artista = album.artista_appartenenza
-    artist_name = artista.nome_artista
-    album_title = album.titolo_album
-    track_title = brano.titolo_brano
-    search_query = f"{artist_name} {album_title} {track_title}".strip()
-
-    bandcamp_url = find_bandcamp_url(artist_name, album_title, track_title)
-    if bandcamp_url:
-        return redirect(bandcamp_url)
-
-    context = {
-        "brano": brano,
-        "album": album,
-        "artista": artista,
-        "search_query": search_query,
-        "youtube_url": youtube_search_url(artist_name, album_title, track_title),
-    }
-    return render(request, "music/ascolta_brano.html", context)
+    refresh = request.GET.get("refresh") == "1"
+    url, _fonte, _from_cache = resolve_listen_url(brano, refresh=refresh)
+    return redirect(url)
 
 
 def _link_callback(uri, rel):

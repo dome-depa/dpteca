@@ -67,12 +67,26 @@ class Album(models.Model):
 
 
 class Brano(models.Model):
+    ASCOLTO_FONTE_BANDCAMP = "bandcamp"
+    ASCOLTO_FONTE_YOUTUBE = "youtube"
+    ASCOLTO_FONTE_CHOICES = [
+        (ASCOLTO_FONTE_BANDCAMP, "Bandcamp"),
+        (ASCOLTO_FONTE_YOUTUBE, "YouTube"),
+    ]
+
     titolo_brano = models.CharField(max_length=150)
     sezione = models.CharField(max_length=2, blank=True, null=True)
     progressivo = models.CharField(max_length=3, blank=True, null=True)    
     crediti = models.CharField(max_length=100, blank=True, null=True)
     durata = models.CharField(max_length=5, blank=True, null=True)
     album_appartenenza = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="brani")
+    ascolto_url = models.URLField(max_length=500, blank=True, null=True)
+    ascolto_fonte = models.CharField(
+        max_length=20,
+        choices=ASCOLTO_FONTE_CHOICES,
+        blank=True,
+        null=True,
+    )
 
     def __str__(self):
         return self.titolo_brano

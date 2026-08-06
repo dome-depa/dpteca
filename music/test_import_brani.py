@@ -176,7 +176,7 @@ class ImportBraniAlbumViewTestCase(TestCase):
         self.assertEqual(self.album.brani.count(), 2)
         messages = [str(message) for message in response.context["messages"]]
         self.assertTrue(any("1 creati" in message for message in messages))
-        self.assertTrue(any("1 saltati" in message for message in messages))
+        self.assertTrue(any("1 aggiornati" in message for message in messages))
 
     def test_import_tracks_for_album_service(self):
         tracks = [
@@ -205,5 +205,27 @@ class ImportBraniAlbumViewTestCase(TestCase):
         self.assertEqual(result.skipped, 0)
         self.assertEqual(brano.sezione, "a")
         self.assertEqual(brano.progressivo, "1")
-        self.assertEqual(brano.durata, None)
-        self.assertEqual(brano.crediti, None)
+        self.assertEqual(brano.durata, "3:19")
+        self.assertEqual(brano.crediti, "Waters")
+
+    def test_import_does_not_overwrite_existing_metadata_by_default(self):
+        brano = Brano.objects.create(
+            titolo_brano="In the Flesh?",
+            sezione="a",
+            progressivo="1",
+            durata="4:00",
+            crediti="Esistenti",
+            album_appartenenza=self.album,
+        )
+        tracks = [
+            TrackCandidate("In the Flesh?", "b", "2", "3:19", "Waters"),
+        ]
+
+        result = import_tracks_for_album(self.album, tracks, skip_existing=True)
+
+        brano.refresh_from_db()
+        self.assertEqual(result.updated, 1)
+        self.assertEqual(brano.sezione, "b")
+        self.assertEqual(brano.progressivo, "2")
+        self.assertEqual(brano.durata, "4:00")
+        self.assertEqual(brano.crediti, "Esistenti")
