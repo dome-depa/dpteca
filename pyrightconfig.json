@@ -1,0 +1,21 @@
+{
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Linux",
+  "venvPath": ".",
+  "venv": "venv",
+  "extraPaths": [
+    "venv/lib/python3.13/site-packages"
+  ],
+  "include": [
+    "accounts",
+    "core",
+    "music",
+    "dpteca"
+  ],
+  "exclude": [
+    "venv",
+    "**/__pycache__",
+    "staticfiles"
+  ],
+  "reportMissingImports": "warning"
+}
