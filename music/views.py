@@ -9,7 +9,6 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.template.loader import render_to_string
 from django.conf import settings
 import os
-from io import BytesIO
 
 from .forms import AlbumModelForm, BranoModelForm, ArtistaModelForm, AlbumDesideratoForm
 from django.db.models import Prefetch, Case, When, IntegerField
@@ -147,148 +146,10 @@ def report_artisti_pdf(request):
     Accesso non ristretto (solo lettura).
     """
     try:
-        # Import locale per evitare errori di import a livello modulo in ambienti senza xhtml2pdf
         from xhtml2pdf import pisa
     except ImportError:
-        # Fallback: genera PDF con ReportLab
-        try:
-            from reportlab.lib.pagesizes import A4
-            from reportlab.lib.units import mm
-            from reportlab.pdfgen import canvas
-            from reportlab.lib.utils import ImageReader
-        except ImportError:
-            return HttpResponse("PDF non disponibile: installare reportlab.", status=500)
+        return HttpResponse("PDF non disponibile: installare xhtml2pdf.", status=500)
 
-        buffer = BytesIO()
-        c = canvas.Canvas(buffer, pagesize=A4)
-        width, height = A4
-
-        x_margin = 14 * mm
-        y_margin = 18 * mm
-        y = height - y_margin
-
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(x_margin, y, "Elenco Artisti e Discografie")
-        y -= 10 * mm
-
-        c.setFont("Helvetica", 10)
-        for artista in Artista.objects.all().order_by("nome_artista"):
-            # intestazione artista
-            if y < 40 * mm:
-                c.showPage()
-                y = height - y_margin
-            c.setFont("Helvetica-Bold", 12)
-            c.drawString(x_margin, y, artista.nome_artista or "")
-            y -= 6 * mm
-            c.setFont("Helvetica", 10)
-
-            # albums: include "Classica" in coda, poi ordina per genere (Z->A), artista, supporto, anno, titolo
-            albums_qs = (
-                Album.objects.filter(artista_appartenenza=artista)
-                .annotate(
-                    classica_in_coda=Case(
-                        When(genere__iexact="Classica", then=1),
-                        default=0,
-                        output_field=IntegerField(),
-                    )
-                )
-                .order_by(
-                    "classica_in_coda",
-                    "-genere",
-                    "artista_appartenenza__nome_artista",
-                    "supporto",
-                    "data_rilascio",
-                    "titolo_album",
-                )
-            )
-            for album in albums_qs:
-                if y < 30 * mm:
-                    c.showPage()
-                    y = height - y_margin
-                # testo a sinistra
-                title = album.titolo_album or ""
-                anno = f" ({album.data_rilascio.year})" if album.data_rilascio else ""
-                c.drawString(x_margin, y, f"{title}{anno}")
-                y -= 5 * mm
-                meta_kv = []
-                if getattr(album, "genere", None):
-                    meta_kv.append(("Genere", album.genere))
-                if album.editore:
-                    meta_kv.append(("Etichetta", album.editore))
-                if album.catalogo:
-                    meta_kv.append(("Catalogo", album.catalogo))
-                try:
-                    num_brani = album.brani.count()
-                except Exception:
-                    num_brani = 0
-                if num_brani:
-                    meta_kv.append(("Brani", str(num_brani)))
-                if meta_kv:
-                    x_text = x_margin
-                    for idx, (label_txt, value_txt) in enumerate(meta_kv):
-                        # label normale
-                        c.setFont("Helvetica", 9)
-                        label_render = f"{label_txt}: "
-                        c.drawString(x_text, y, label_render)
-                        x_text += c.stringWidth(label_render, "Helvetica", 9)
-                        # valore corsivo
-                        c.setFont("Helvetica-Oblique", 9)
-                        c.drawString(x_text, y, str(value_txt))
-                        x_text += c.stringWidth(str(value_txt), "Helvetica-Oblique", 9)
-                        # separatore per coppie successive
-                        if idx < len(meta_kv) - 1:
-                            sep = " • "
-                            c.setFont("Helvetica", 9)
-                            c.drawString(x_text, y, sep)
-                            x_text += c.stringWidth(sep, "Helvetica", 9)
-                    c.setFont("Helvetica", 10)
-                # immagine a destra
-                if album.copertina and getattr(album.copertina, "path", None):
-                    try:
-                        img = ImageReader(album.copertina.path)
-                        img_w = img_h = 28 * mm
-                        c.drawImage(
-                            img,
-                            width - x_margin - img_w,
-                            y - img_h + 3 * mm,
-                            width=img_w,
-                            height=img_h,
-                            preserveAspectRatio=True,
-                            anchor="n",
-                        )
-                    except Exception:
-                        pass
-                y -= 10 * mm
-
-            y -= 4 * mm
-
-        # Aggiungi statistiche finali
-        if y < 30 * mm:
-            c.showPage()
-            y = height - y_margin
-        
-        y -= 10 * mm
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(x_margin, y, "Riepilogo")
-        y -= 6 * mm
-        c.setFont("Helvetica", 10)
-        
-        # Conta artisti e album totali (escludendo Classica)
-        total_artisti = Artista.objects.count()
-        total_albums = Album.objects.exclude(genere__iexact="Classica").count()
-        
-        c.drawString(x_margin, y, f"Numero totale artisti: {total_artisti}")
-        y -= 5 * mm
-        c.drawString(x_margin, y, f"Numero totale album: {total_albums}")
-
-        c.showPage()
-        c.save()
-        pdf = buffer.getvalue()
-        buffer.close()
-        response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = 'inline; filename="artisti_albums.pdf"'
-        response.write(pdf)
-        return response
     # Include "Classica" in coda, poi ordina per genere (Z->A), artista, supporto, anno, titolo
     albums_ordered = (
         Album.objects.all()

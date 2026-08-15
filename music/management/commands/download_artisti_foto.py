@@ -120,35 +120,42 @@ class Command(BaseCommand):
         return self.search_google_images(artist_name)
     
     def search_google_images(self, artist_name):
-        """Fallback: cerca immagini usando ricerca Google diretta"""
+        """Fallback opzionale: DuckDuckGo (pacchetto non incluso nel runtime)."""
         try:
-            # Usa DuckDuckGo come fallback con delay maggiore
             from duckduckgo_search import DDGS
-            
+        except ImportError:
+            self.stdout.write(
+                self.style.WARNING(
+                    "duckduckgo-search non installato: salto ricerca immagini online. "
+                    "Opzionale: pip install duckduckgo-search"
+                )
+            )
+            return None
+
+        try:
             query = f"{artist_name} musician band artist photo"
-            time.sleep(5)  # Delay maggiore per evitare rate limit
-            
+            time.sleep(5)
+
             with DDGS() as ddgs:
                 results = list(ddgs.images(
                     query,
                     max_results=3,
                     safesearch='moderate'
                 ))
-            
+
             if not results:
                 return None
-            
-            # Prova a scaricare la prima immagine valida
+
             for result in results:
                 url = result.get('image')
                 if url:
                     img_data = self.download_image(url)
                     if img_data:
                         return img_data
-            
+
             return None
-            
-        except Exception as e:
+
+        except Exception:
             return None
 
     def handle(self, *args, **options):
