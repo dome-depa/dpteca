@@ -7,7 +7,6 @@ from music.models import Album, Artista, Brano
 from music.services.listening import (
     cache_listen_url,
     find_bandcamp_url,
-    find_listen_url,
     find_youtube_watch_url,
     resolve_listen_url,
     youtube_search_url,
@@ -67,36 +66,19 @@ class ListeningServiceTestCase(TestCase):
     def test_find_youtube_watch_url_without_api_key(self):
         self.assertIsNone(find_youtube_watch_url("A", "B", "C"))
 
-    @patch("music.services.listening.find_bandcamp_url")
-    def test_find_listen_url_prefers_bandcamp(self, mock_bandcamp):
-        mock_bandcamp.return_value = "https://artist.bandcamp.com/track/demo"
-
-        url, source = find_listen_url("A", "B", "C")
-
-        self.assertEqual(source, "bandcamp")
-        self.assertEqual(url, "https://artist.bandcamp.com/track/demo")
-
     @patch("music.services.listening.find_youtube_watch_url")
     @patch("music.services.listening.find_bandcamp_url")
-    def test_find_listen_url_prefers_youtube_watch(self, mock_bandcamp, mock_youtube):
+    def test_resolve_prefers_youtube_watch_when_no_bandcamp(self, mock_bandcamp, mock_youtube):
         mock_bandcamp.return_value = None
         mock_youtube.return_value = "https://www.youtube.com/watch?v=abc123"
 
-        url, source = find_listen_url("Artist", "Album", "Track")
+        url, source, from_cache = resolve_listen_url(self.brano)
 
+        self.brano.refresh_from_db()
+        self.assertFalse(from_cache)
         self.assertEqual(source, "youtube")
         self.assertEqual(url, "https://www.youtube.com/watch?v=abc123")
-
-    @patch("music.services.listening.find_youtube_watch_url")
-    @patch("music.services.listening.find_bandcamp_url")
-    def test_find_listen_url_falls_back_to_youtube_search(self, mock_bandcamp, mock_youtube):
-        mock_bandcamp.return_value = None
-        mock_youtube.return_value = None
-
-        url, source = find_listen_url("Artist", "Album", "Track")
-
-        self.assertEqual(source, "youtube")
-        self.assertIn("youtube.com/results", url)
+        self.assertEqual(self.brano.ascolto_url, url)
 
     @patch("music.services.listening.find_bandcamp_url")
     def test_resolve_caches_bandcamp_url(self, mock_bandcamp):

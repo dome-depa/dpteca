@@ -71,7 +71,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"  # impostazione necessaria pre django_crispy
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Per servire file statici in produzione
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -108,13 +107,13 @@ WSGI_APPLICATION = 'dpteca.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Database PostgreSQL (locale o server Apache)
+# Database PostgreSQL (credenziali da .env / ambiente)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'mydbase'),
         'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'Feb#56#aio'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
@@ -157,10 +156,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 STATICFILES_DIRS = [BASE_DIR / 'static-storage']
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Per collectstatic in produzione
-
-# WhiteNoise per servire file statici in produzione
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Per collectstatic; Apache serve Alias /static
 
 # percorso della cartella fuori dalla cartella di progetto per poterla condividere con altri progetti
 MEDIA_ROOT = BASE_DIR / '../media-serve'

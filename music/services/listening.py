@@ -145,18 +145,3 @@ def resolve_listen_url(
         Brano.ASCOLTO_FONTE_YOUTUBE,
         False,
     )
-
-
-def find_listen_url(artist: str, album: str, track: str) -> tuple[str, str]:
-    """
-    Restituisce (url, fonte) con fonte 'bandcamp' o 'youtube'.
-    """
-    bandcamp_url = find_bandcamp_url(artist, album, track)
-    if bandcamp_url:
-        return bandcamp_url, Brano.ASCOLTO_FONTE_BANDCAMP
-
-    youtube_watch = find_youtube_watch_url(artist, album, track)
-    if youtube_watch:
-        return youtube_watch, Brano.ASCOLTO_FONTE_YOUTUBE
-
-    return youtube_search_url(artist, album, track), Brano.ASCOLTO_FONTE_YOUTUBE

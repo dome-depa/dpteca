@@ -299,13 +299,15 @@ class BranoEditDeleteTestCase(TestCase):
         self.assertContains(response, reverse('elimina_brano', kwargs={'pk': self.brano.pk}))
     
     def test_brano_buttons_hidden_for_regular_users(self):
-        """Test che i pulsanti non siano visibili per utenti normali"""
+        """Test che i pulsanti di modifica/eliminazione non siano visibili per utenti normali"""
         self.client.login(username='regular', password='testpass123')
         response = self.client.get(reverse('album_view', kwargs={'pk': self.album.pk}))
         
-        # I pulsanti non dovrebbero essere presenti
-        self.assertNotContains(response, 'btn-outline-primary')
+        self.assertContains(response, 'Ascolta')
         self.assertNotContains(response, reverse('modifica_brano', kwargs={'pk': self.brano.pk}))
+        self.assertNotContains(response, reverse('elimina_brano', kwargs={'pk': self.brano.pk}))
+        self.assertNotContains(response, 'Modifica')
+        self.assertNotContains(response, 'Elimina')
     
     def test_success_messages(self):
         """Test che i messaggi di successo siano mostrati"""

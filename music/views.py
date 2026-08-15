@@ -9,7 +9,6 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.template.loader import render_to_string
 from django.conf import settings
 import os
-from django.urls import reverse_lazy
 from io import BytesIO
 
 from .forms import AlbumModelForm, BranoModelForm, ArtistaModelForm, AlbumDesideratoForm

@@ -7,9 +7,6 @@ from music.models import Artista, Album, Brano
 
 # Create your views here.
 
-""" def homepage(request):
-    return render(request, 'core/homepage.html') """
-    
 """
     utilizzando queryset anzichè model (di ListView ) sarà possibile utilizzare filtri pittosto che ordinamenti
 """
